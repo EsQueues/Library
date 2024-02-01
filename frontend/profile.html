@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+<h1>Welcome to your profile, {{.Fullname}}</h1>
+<p>Full Name: {{.Fullname}}</p>
+
+<a href="/edit" role="button">Edit Profile</a>
+
+<form action="/delete" method="post">
+    <input type="submit" value="Delete Account">
+</form>
+</body>
+</html>
