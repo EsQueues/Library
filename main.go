@@ -106,7 +106,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Login successful. Redirecting to profile..."))
+		w.Write([]byte("Login successful. Redirect to profile..."))
 		return
 	}
 
@@ -260,7 +260,7 @@ func main() {
 		log.Println("Received request for /")
 		http.ServeFile(w, r, "frontend/index.html")
 	})
-	r.HandleFunc("/register", registerHandler).Methods("POST")
+	r.HandleFunc("/register", registerHandler).Methods("POST", "GET")
 	r.HandleFunc("/login", loginHandler).Methods("POST", "GET")
 	r.HandleFunc("/profile", profileHandler).Methods("GET")
 	r.HandleFunc("/delete", deleteHandler).Methods("POST")
