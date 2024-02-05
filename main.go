@@ -23,6 +23,14 @@ type User struct {
 	Password string `json:"password"`
 }
 
+type Book struct {
+	Title  string `json:"title"`
+	Author string `json:"author"`
+	Genre string `json:"genre"`
+	PublicationYear int32     `json:"publicationYear"`
+	ISBN string `json:"isbn"`
+}
+
 func init() {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 	var err error
@@ -254,6 +262,87 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/profile", http.StatusSeeOther)
 
 }
+func filterBooksHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		filterValue := r.URL.Query().Get("filter")
+		sortValue := r.URL.Query().Get("sort")
+
+		filter := bson.M{"title": bson.M{"$regex": filterValue, "$options": "i"}}
+
+		books, err := getFilteredBooks(filter)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if sortValue != "" {
+			books = sortBooks(books, sortValue)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(books)
+	}
+}
+
+func getFilteredBooks(filter bson.M) ([]Book, error) {
+	collection := client.Database("project").Collection("books")
+
+	indexModel := mongo.IndexModel{
+		Keys: bson.M{"title": 1},
+	}
+
+	indexOptions := options.CreateIndexes().SetMaxTime(2 * time.Second) 
+
+	_, err := collection.Indexes().CreateOne(context.Background(), indexModel, indexOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	cursor, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	var books []Book
+	for cursor.Next(context.Background()) {
+		var book Book
+		err := cursor.Decode(&book)
+		if err != nil {
+			return nil, err
+		}
+		books = append(books, book)
+	}
+
+	return books, nil
+}
+
+func sortBooks(books []Book, sortBy string) []Book {
+	switch sortBy {
+	case "title":
+		sort.Slice(books, func(i, j int) bool {
+			return books[i].Title < books[j].Title
+		})
+	case "author":
+		sort.Slice(books, func(i, j int) bool {
+			return books[i].Author < books[j].Author
+		})
+	case "genre":
+		sort.Slice(books, func(i, j int) bool {
+			return books[i].Genre < books[j].Genre
+		})
+	case "publicationYear":
+		sort.Slice(books, func(i, j int) bool {
+			return books[i].PublicationYear < books[j].PublicationYear
+		})
+	default:
+		fmt.Println("Invalid sortBy parameter")
+	}
+
+	return books
+}
+
+
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
