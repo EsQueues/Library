@@ -1,12 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Homepage</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
-<body>
-<h1>Welcome to the Homepage</h1>
-<a href="/login"><button>Sign In</button></a>
+
+<body class="container mt-4">
+
+<div class="row mb-4">
+  <div class="col">
+    <h1>Welcome to the Homepage</h1>
+  </div>
+  <div class="col-md-3 text-right">
+    <a href="/login" class="btn btn-secondary">Sign In</a>
+  </div>
+</div>
+
+<form action="/filtered-books" method="get" class="mb-4">
+  <div class="form-row align-items-end">
+    <div class="col-md-4 mb-2">
+      <label for="filter">Filter by Title:</label>
+      <input type="text" id="filter" name="filter" class="form-control" placeholder="Enter title" />
+    </div>
+    <div class="col-md-4 mb-2">
+      <label for="sort">Sort:</label>
+      <select id="sort" name="sort" class="form-control">
+        <option value="title">By Title</option>
+        <option value="author">By Author</option>
+        <option value="genre">By Genre</option>
+        <option value="publicationYear">By Publication Year</option>
+      </select>
+    </div>
+    <div class="col-md-4 mb-2">
+      <button type="submit" class="btn btn-primary">Apply</button>
+    </div>
+  </div>
+</form>
+
+<hr />
+
+<div id="filtered-books"></div>
+
+<div id="pagination" class="mt-4">
+  <button onclick="previousPage()" class="btn btn-outline-primary">Previous</button>
+  <span id="currentPage" class="mx-2">1</span>
+  <button onclick="nextPage()" class="btn btn-outline-primary">Next</button>
+</div>
+
+
+
+<script>
+  let currentPage = 1;
+
+  function updatePageNumber() {
+    document.getElementById("currentPage").innerText = currentPage;
+  }
+
+  function fetchAndDisplayBooks() {
+    const filterValue = document.getElementById("filter").value;
+    const sortValue = document.getElementById("sort").value;
+
+    fetch(`/filtered-books?filter=${filterValue}&sort=${sortValue}&page=${currentPage}`)
+            .then((response) => response.json())
+            .then((books) => {
+              document.getElementById("filtered-books").innerHTML = "";
+
+              books.forEach((book) => {
+                const bookElement = document.createElement("div");
+                bookElement.innerHTML = `<strong>Title:</strong> ${book.title}<br>
+            <strong>Author:</strong> ${book.author} <br>
+            <strong>Genre:</strong> ${book.genre} <br>
+            <strong>Publication Year:</strong> ${book.publicationYear}<br>
+            <hr>`;
+
+                document.getElementById("filtered-books").appendChild(bookElement);
+              });
+
+              updatePageNumber();
+            })
+            .catch((error) => {
+              console.error("Error fetching filtered books:", error);
+            });
+  }
+
+  function nextPage() {
+    currentPage++;
+    fetchAndDisplayBooks();
+  }
+
+  function previousPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      fetchAndDisplayBooks();
+    }
+  }
+
+  document.querySelector("form").addEventListener("submit", function (event) {
+    event.preventDefault();
+    currentPage = 1;
+    fetchAndDisplayBooks();
+  });
+
+  fetchAndDisplayBooks();</script>
 </body>
 </html>

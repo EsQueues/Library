@@ -2,20 +2,29 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/time/rate"
 	"html/template"
-	"log"
 	"net/http"
+	"os"
+	"sort"
+	"strconv"
+	"time"
 )
 
 var store = sessions.NewCookieStore([]byte("your-secret-key"))
 
 var client *mongo.Client
+var limiter = rate.NewLimiter(1, 3)
+var log = logrus.New()
 
 type User struct {
 	Fullname string `json:"fullname"`
@@ -24,11 +33,11 @@ type User struct {
 }
 
 type Book struct {
-	Title  string `json:"title"`
-	Author string `json:"author"`
-	Genre string `json:"genre"`
-	PublicationYear int32     `json:"publicationYear"`
-	ISBN string `json:"isbn"`
+	Title           string `json:"title"`
+	Author          string `json:"author"`
+	Genre           string `json:"genre"`
+	PublicationYear int32  `json:"publicationYear"`
+	ISBN            string `json:"isbn"`
 }
 
 func init() {
@@ -38,8 +47,35 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-}
 
+	// Create a logs folder if it doesn't exist
+	if _, err := os.Stat("logs"); os.IsNotExist(err) {
+		err := os.Mkdir("logs", 0755)
+		if err != nil {
+			return
+		}
+	}
+
+	logFile, err := os.OpenFile("logs/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err == nil {
+		println("")
+		log.SetOutput(logFile)
+		log.SetFormatter(&logrus.TextFormatter{})
+		log.SetLevel(logrus.DebugLevel)
+	} else {
+		log.Error("Failed to log to file, using default stderr")
+	}
+}
+func rateLimitMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !limiter.Allow() {
+			// Exceeded request limit
+			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+}
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
@@ -65,10 +101,13 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("User registered successfully"))
+		fmt.Println("User registered successfully. Redirecting to login page.")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
 	http.ServeFile(w, r, "frontend/register.html")
 }
 
@@ -87,7 +126,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		filter := bson.M{"username": username}
 		var storedUser User
 		err = collection.FindOne(context.Background(), filter).Decode(&storedUser)
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 			return
 		} else if err != nil {
@@ -114,10 +153,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Login successful. Redirect to profile..."))
+		fmt.Println("Login successful. Redirecting to profile page.")
+
+		http.Redirect(w, r, "/profile", http.StatusSeeOther)
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
 	http.ServeFile(w, r, "frontend/login.html")
 }
 
@@ -262,26 +305,63 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/profile", http.StatusSeeOther)
 
 }
+
+const booksPerPage = 10
+
 func filterBooksHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
+		// Extract page and filter parameters from the request
+		pageStr := r.URL.Query().Get("page")
 		filterValue := r.URL.Query().Get("filter")
-		sortValue := r.URL.Query().Get("sort")
 
-		filter := bson.M{"title": bson.M{"$regex": filterValue, "$options": "i"}}
+		// Parse page number
+		page := 1
+		if pageStr != "" {
+			p, err := strconv.Atoi(pageStr)
+			if err == nil && p > 0 {
+				page = p
+			}
+		}
 
-		books, err := getFilteredBooks(filter)
+		// Calculate skip value based on page number
+		skip := (page - 1) * booksPerPage
+
+		// Perform sorting and pagination on the server side
+		sortBy := r.URL.Query().Get("sort")
+		books, err := getSortedAndPaginatedBooks(filterValue, sortBy, skip, booksPerPage)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		if sortValue != "" {
-			books = sortBooks(books, sortValue)
-		}
-
+		// Encode the result as JSON and send it in the response
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(books)
 	}
+}
+
+func getSortedAndPaginatedBooks(filterValue, sortBy string, skip, limit int) ([]Book, error) {
+	// Get all books matching the filter
+	filter := bson.M{"title": bson.M{"$regex": filterValue, "$options": "i"}}
+	books, err := getFilteredBooks(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	// Sort the entire list of books
+	books = sortBooks(books, sortBy)
+
+	// Paginate the sorted list
+	start := skip
+	end := skip + limit
+	if start > len(books) {
+		start = len(books)
+	}
+	if end > len(books) {
+		end = len(books)
+	}
+
+	return books[start:end], nil
 }
 
 func getFilteredBooks(filter bson.M) ([]Book, error) {
@@ -291,7 +371,7 @@ func getFilteredBooks(filter bson.M) ([]Book, error) {
 		Keys: bson.M{"title": 1},
 	}
 
-	indexOptions := options.CreateIndexes().SetMaxTime(2 * time.Second) 
+	indexOptions := options.CreateIndexes().SetMaxTime(2 * time.Second)
 
 	_, err := collection.Indexes().CreateOne(context.Background(), indexModel, indexOptions)
 	if err != nil {
@@ -342,19 +422,19 @@ func sortBooks(books []Book, sortBy string) []Book {
 	return books
 }
 
-
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Received request for /")
 		http.ServeFile(w, r, "frontend/index.html")
 	})
-	r.HandleFunc("/register", registerHandler).Methods("POST", "GET")
-	r.HandleFunc("/login", loginHandler).Methods("POST", "GET")
-	r.HandleFunc("/profile", profileHandler).Methods("GET")
-	r.HandleFunc("/delete", deleteHandler).Methods("POST")
-	r.HandleFunc("/edit", editHandler).Methods("GET")
-	r.HandleFunc("/update", updateHandler).Methods("POST")
+	r.HandleFunc("/register", rateLimitMiddleware(registerHandler)).Methods("POST", "GET")
+	r.HandleFunc("/login", rateLimitMiddleware(loginHandler)).Methods("POST", "GET")
+	r.HandleFunc("/profile", rateLimitMiddleware(profileHandler)).Methods("GET")
+	r.HandleFunc("/delete", rateLimitMiddleware(deleteHandler)).Methods("POST")
+	r.HandleFunc("/edit", rateLimitMiddleware(editHandler)).Methods("GET")
+	r.HandleFunc("/update", rateLimitMiddleware(updateHandler)).Methods("POST")
+	r.HandleFunc("/filtered-books", rateLimitMiddleware(filterBooksHandler)).Methods("GET")
 
 	fmt.Println("Server started on :8080")
 	err := http.ListenAndServe(":8080", r)

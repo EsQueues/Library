@@ -1,16 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>User Profile</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
-<body>
-<h1>Welcome to your profile, {{.Fullname}}</h1>
-<p>Full Name: {{.Fullname}}</p>
+<body class="container mt-5">
+<div class="text-center">
+    <h1>Welcome to your profile, {{.Fullname}}</h1>
+    <p>Full Name: {{.Fullname}}</p>
 
-<a href="/edit" role="button">Edit Profile</a>
+    <a href="/edit" class="btn btn-primary" role="button">Edit Profile</a>
 
-<form action="/delete" method="post">
-    <input type="submit" value="Delete Account">
-</form>
+    <form action="/delete" method="post" class="mt-3">
+        <input type="submit" class="btn btn-danger" value="Delete Account">
+    </form>
+</div>
+
+
 </body>
 </html>

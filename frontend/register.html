@@ -3,26 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
     <title>Registration</title>
 </head>
-<body>
+<body class="container mt-5">
 
-<h1>Registration Form</h1>
+<div class="text-center">
+    <h1>Registration Form</h1>
 
-<form id="registrationForm" action="/register" method="post">
-    <label for="fullname">Full name:</label>
-    <input type="text" id="fullname" name="fullname" required>
+    <form id="registrationForm" action="/register" method="post" class="col-md-6 offset-md-3">
+        <div class="form-group">
+            <label for="fullname">Full name:</label>
+            <input type="text" id="fullname" name="fullname" class="form-control" required>
+        </div>
 
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required>
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" class="form-control" required>
+        </div>
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
-    <button type="submit">Register</button>
-</form>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+        </div>
 
-
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+</div>
 
 
 </body>
