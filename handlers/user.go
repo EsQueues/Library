@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/sessions"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"website/database"
 )
 
 var store = sessions.NewCookieStore([]byte("your-secret-key"))
@@ -26,14 +25,16 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 		fullname := r.FormValue("fullname")
 		username := r.FormValue("username")
+		email := r.FormValue("email")
 		password := r.FormValue("password")
 		user := models.User{
 			Fullname: fullname,
 			Username: username,
+			Email:    email,
 			Password: password,
 		}
 
-		collection := database.Client.Database("project").Collection("users")
+		collection := client.Database("project").Collection("users")
 		_, err = collection.InsertOne(context.Background(), user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
