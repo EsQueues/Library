@@ -26,7 +26,11 @@ func main() {
 	r.HandleFunc("/edit", handlers.EditHandler).Methods("GET")
 	r.HandleFunc("/update", handlers.UpdateHandler).Methods("POST")
 	r.HandleFunc("/filtered-books", handlers.FilterBooksHandler).Methods("GET")
-
+	r.HandleFunc("/confirm", handlers.ConfirmHandler).Methods("GET", "POST")
+	r.HandleFunc("/email-confirmed", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "frontend/email-confirmed.html")
+	})
+	r.HandleFunc("/", handlers.IndexHandler)
 	r.Use(middleware.RateLimitMiddleware)
 
 	server := &http.Server{
