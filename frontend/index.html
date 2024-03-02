@@ -14,8 +14,8 @@
     <h1>Welcome to the Homepage</h1>
   </div>
   <div class="col-md-3 text-right">
-    <a href="/login" class="btn btn-secondary">Sign In</a>
-  </div>
+    </div>
+
 </div>
 
 <form action="/filtered-books" method="get" class="mb-4">
@@ -104,5 +104,29 @@
   });
 
   fetchAndDisplayBooks();</script>
+<div class="col-md-3 text-right">
+  <script>
+    // Get the username from the URL query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const username = urlParams.get('username');
+
+    if (username) {
+      // If username exists, display it as a link to the profile page
+      const link = document.createElement('a');
+      link.href = '/profile';
+      link.classList.add('btn', 'btn-secondary');
+      link.textContent = username;
+      document.querySelector('.text-right').appendChild(link);
+    } else {
+      // If username doesn't exist, display the sign-in button
+      const signInButton = document.createElement('a');
+      signInButton.href = '/login';
+      signInButton.classList.add('btn', 'btn-secondary');
+      signInButton.textContent = 'Sign In';
+      document.querySelector('.text-right').appendChild(signInButton);
+    }
+  </script>
+</div>
+
 </body>
 </html>
