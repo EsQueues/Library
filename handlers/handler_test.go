@@ -13,6 +13,7 @@ import (
 	"website/models"
 )
 
+// k
 func TestIfGeneratedCodeIsCorrect(t *testing.T) {
 	code := GenerateCode()
 	if len(code) != codeLength {
