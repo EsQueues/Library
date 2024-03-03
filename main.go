@@ -31,6 +31,11 @@ func main() {
 		http.ServeFile(w, r, "frontend/email-confirmed.html")
 	})
 	r.HandleFunc("/", handlers.IndexHandler)
+	r.HandleFunc("/message", handlers.MessageHandler).Methods("GET", "POST")
+	r.HandleFunc("/admin", handlers.AdminDashboardHandler).Methods("GET")
+	r.HandleFunc("/edit-book", handlers.EditBookHandler).Methods("GET")
+	r.HandleFunc("/delete-book", handlers.DeleteBookHandler).Methods("POST")
+	r.HandleFunc("/add-book", handlers.AddBookHandler).Methods("POST")
 	r.Use(middleware.RateLimitMiddleware)
 
 	server := &http.Server{
