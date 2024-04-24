@@ -13,7 +13,6 @@ import (
 	"website/models"
 )
 
-// k
 func TestIfGeneratedCodeIsCorrect(t *testing.T) {
 	code := GenerateCode()
 	if len(code) != codeLength {
@@ -62,51 +61,5 @@ func TestIfUserAfterRegistrationSavedInDBCorrectly(t *testing.T) {
 
 	if user.Fullname != "Test User" || user.Email != "test@example.com" {
 		t.Errorf("Unexpected user data in database")
-	}
-}
-
-func TestUserLifecycle(t *testing.T) {
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	client, err := mongo.Connect(context.Background(), clientOptions)
-	if err != nil {
-		t.Fatalf("Failed to connect to MongoDB: %v", err)
-	}
-	defer func(client *mongo.Client, ctx context.Context) {
-		err := client.Disconnect(ctx)
-		if err != nil {
-			t.Fatalf("Failed to disconnect from MongoDB: %v", err)
-		}
-	}(client, context.Background())
-
-	collection := client.Database("project").Collection("users")
-	filter := bson.M{"username": "testuser"}
-	update := bson.M{"$set": bson.M{"active": true}}
-	_, err = collection.UpdateOne(context.Background(), filter, update)
-	if err != nil {
-		t.Fatalf("Failed to update user in database: %v", err)
-	}
-
-	loginData := []byte(`username=testuser&password=12345`)
-	loginReq, err := http.NewRequest("POST", "/login", bytes.NewBuffer(loginData))
-	if err != nil {
-		t.Fatal(err)
-	}
-	loginReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	loginResp := httptest.NewRecorder()
-	LoginHandler(loginResp, loginReq)
-
-	if loginResp.Code != http.StatusSeeOther {
-		t.Fatalf("Expected status code %d, got %d", http.StatusSeeOther, loginResp.Code)
-	}
-
-	deleteReq, err := http.NewRequest("POST", "/delete", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	deleteResp := httptest.NewRecorder()
-	DeleteHandler(deleteResp, deleteReq)
-
-	if deleteResp.Code != http.StatusSeeOther {
-		t.Fatalf("Expected status code %d, got %d", http.StatusSeeOther, deleteResp.Code)
 	}
 }

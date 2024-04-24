@@ -109,7 +109,7 @@ func EditBookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Render the edit book page with pre-filled form values
-	tmpl, err := template.ParseFiles("frontend/edit-book.html")
+	tmpl, err := template.ParseFiles("frontend/admin.html")
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -122,65 +122,45 @@ func EditBookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// UpdateBookHandler handles the updating of book details.
-func UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract book title from the form values
-	title := r.FormValue("title")
-
-	// Parse form values
+func DeleteBookHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the form data
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Update book with new details
-	author := r.FormValue("author")
-	genre := r.FormValue("genre")
-	year := r.FormValue("publication-year")
+	// Extract book titles from the form values
+	titles := r.Form["title"]
 
-	collection := client.Database("project").Collection("books")
+	// Create a channel to receive errors from goroutines
+	errCh := make(chan error, len(titles))
 
-	filter := bson.M{"title": title} // Filter by the existing book title
-
-	update := bson.M{
-		"$set": bson.M{
-			"author":           author,
-			"genre":            genre,
-			"publication-year": year,
-		},
+	// Iterate over the book titles and delete each book concurrently
+	for _, title := range titles {
+		go func(title string) {
+			err := deleteBookFromDatabase(title)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			errCh <- nil // Signal successful deletion
+		}(title)
 	}
 
-	_, err = collection.UpdateOne(context.Background(), filter, update)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Redirect to the book details page after successful update
-	http.Redirect(w, r, "/book-details?title="+title, http.StatusSeeOther)
-}
-
-func DeleteBookHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract book title from the request
-	title := r.Form.Get("title")
-
-	// Validate title
-	if title == "" {
-		http.Error(w, "Invalid Book Title", http.StatusBadRequest)
-		return
-	}
-
-	// Delete the record from the database (assuming MongoDB)
-	err := deleteBookFromDatabase(title)
-	if err != nil {
-		http.Error(w, "Failed to delete book: "+err.Error(), http.StatusInternalServerError)
-		return
+	// Wait for all goroutines to finish and collect errors
+	for range titles {
+		if err := <-errCh; err != nil {
+			http.Error(w, "Failed to delete book: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Respond with success message
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Book deleted successfully"))
+	w.Write([]byte("Books deleted successfully"))
 }
 
 func AddBookHandler(w http.ResponseWriter, r *http.Request) {
@@ -212,7 +192,7 @@ func AddBookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Redirect to a success page or handle the response as needed
-	http.Redirect(w, r, "/success", http.StatusSeeOther)
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
 
 func updateBookInDatabase(title, author, genre string, publicationYear int64) error {
