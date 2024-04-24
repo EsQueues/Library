@@ -26,7 +26,7 @@
     <div class="container mt-4">
         <h2>{{.Title}}</h2>
         <!-- Add Book Form -->
-        <form action="/admin-dashboard/add-book" method="post">
+        <form action="/add-book" method="post">
             <input type="text" name="title" placeholder="Title" required />
             <input type="text" name="author" placeholder="Author" required />
             <input type="text" name="genre" placeholder="Genre" required />
@@ -49,15 +49,10 @@
                         <p class="card-text">Publication Year: {{.PublicationYear}}</p>
 
                         <!-- Edit Button -->
-                        <a
-                                href="/admin-dashboard/edit-book?title={{.Title}}"
-                                class="btn btn-primary"
-                                role="button"
-                        >Edit Book</a
-                        >
+                        <a href="/edit-book?title={{.Title}}" class="btn btn-primary" role="button">Edit Book</a>
 
                         <!-- Delete Button -->
-                        <form action="/admin-dashboard/delete-book" method="post" class="mt-3">
+                        <form action="/delete-book" method="post" class="mt-3">
                             <input type="hidden" name="title" value="{{.Title}}" />
                             <input
                                     type="submit"
@@ -72,58 +67,10 @@
         </div>
     </div>
 
-<script>
-    // Define JavaScript functions for adding, editing, and deleting books
+</div>
 
-    function editBook(title) {
-        // Fetch book details for editing
-        fetch(`/edit-book?title=${title}`, {
-            method: "GET",
-        })
-            .then((response) => response.json())
-            .then((book) => {
-                // Populate the form with book details for editing
-                document.getElementById("editTitle").value = book.title;
-                document.getElementById("editAuthor").value = book.author;
-                document.getElementById("editGenre").value = book.genre;
-                document.getElementById("editPublicationYear").value =
-                    book.publicationYear;
-
-                // Display the edit form
-                $("#editBookModal").modal("show");
-            });
-    }
-
-    function updateBook() {
-        // Retrieve edited form data
-        const formData = {
-            title: document.getElementById("editTitle").value,
-            author: document.getElementById("editAuthor").value,
-            genre: document.getElementById("editGenre").value,
-            publicationYear: document.getElementById("editPublicationYear").value,
-        };
-
-        // Send AJAX request to update the book
-        fetch("/edit-book", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                // Handle the response as needed
-                console.log(data);
-                // Close the edit form
-                $("#editBookModal").modal("hide");
-            });
-    }
-</script>
-
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
 </html>
