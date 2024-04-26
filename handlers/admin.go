@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"html/template"
@@ -10,6 +11,8 @@ import (
 	"net/http"
 	"net/smtp"
 	"strconv"
+	"sync"
+	"time"
 	"website/database"
 	"website/models"
 )
@@ -222,7 +225,6 @@ func addBookToDatabase(title, author, genre string, publicationYear int64) error
 }
 func MessageHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		// Parse form data
 		err := r.ParseForm()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -232,34 +234,38 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 		subject := r.FormValue("subject")
 		body := r.FormValue("body")
 
-		// Get MongoDB client from the database package
 		client := database.Client
 
-		// Get all users from the database
 		users, err := getUsers(client)
 		if err != nil {
 			http.Error(w, "Error fetching users", http.StatusInternalServerError)
 			return
 		}
 
-		// Extract email addresses from users
 		var emails []string
 		for _, user := range users {
 			emails = append(emails, user.Email)
 		}
 
-		// Send email to all users
-		err = sendMailSimple(subject, body, emails)
+		start := time.Now()
+
+		//err = sendMailSimple(subject, body, emails)
+		//err = sendMailConcurrent(subject, body, emails, 1)
+		//err = sendMailConcurrent(subject, body, emails, 10)
+		//err = sendMailConcurrent(subject, body, emails, 100)
+		err = sendMailConcurrent(subject, body, emails, 1000)
+
 		if err != nil {
 			http.Error(w, "Error sending email", http.StatusInternalServerError)
 			return
 		}
 
-		// Redirect or display confirmation message
+		elapsed := time.Since(start)
+		fmt.Printf("Sending emails took %s\n", elapsed)
+
 		http.Redirect(w, r, "/admin", http.StatusSeeOther)
 		return
 	} else if r.Method == http.MethodGet {
-		// Serve the admin page template
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		http.ServeFile(w, r, "frontend/admin.html")
 	} else {
@@ -269,7 +275,6 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// getUsers fetches all users from the database
 func getUsers(client *mongo.Client) ([]models.User, error) {
 	var users []models.User
 
@@ -316,5 +321,45 @@ func sendMailSimple(subject string, body string, to []string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func sendMailConcurrent(subject string, body string, to []string, numWorkers int) error {
+	auth := smtp.PlainAuth(
+		"",
+		"saiat.kusainov05@gmail.com",
+		"mvip fblq yhtq gwqa",
+		"smtp.gmail.com")
+
+	msg := "Subject: " + subject + "\n" + body
+
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, numWorkers)
+
+	for _, recipient := range to {
+		wg.Add(1)
+		semaphore <- struct{}{} // Acquire a worker slot
+		go func(recipient string) {
+			defer func() {
+				<-semaphore // Release the worker slot
+				wg.Done()
+			}()
+
+			err := smtp.SendMail(
+				"smtp.gmail.com:587",
+				auth,
+				"saiat.kusainov05@gmail.com",
+				[]string{recipient},
+				[]byte(msg),
+			)
+
+			if err != nil {
+				fmt.Printf("Error sending email to %s: %v\n", recipient, err)
+			}
+		}(recipient)
+	}
+
+	wg.Wait()
+
 	return nil
 }
