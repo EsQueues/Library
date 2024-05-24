@@ -23,51 +23,42 @@
         <button type="submit" class="btn btn-primary">Send Email</button>
     </form>
 
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h2 class="mt-5">Admin Dashboard</h2>
+      <div class="mt-3">
+        <h3>Active Chats</h3>
+        <div id="active-chats"></div>
+      </div>
 
-    <div class="container mt-4">
-        <h2>{{.Title}}</h2>
-        <!-- Add Book Form -->
-        <form action="/add-book" method="post">
-            <input type="text" name="title" placeholder="Title" required />
-            <input type="text" name="author" placeholder="Author" required />
-            <input type="text" name="genre" placeholder="Genre" required />
-            <input
-                    type="number"
-                    name="publicationYear"
-                    placeholder="Publication Year"
-                    required
-            />
-            <button class="btn btn-success" type="submit">Add Book</button>
-        </form>
-        <div class="row">
-            {{range .Books}}
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">{{.Title}}</h5>
-                        <p class="card-text">Author: {{.Author}}</p>
-                        <p class="card-text">Genre: {{.Genre}}</p>
-                        <p class="card-text">Publication Year: {{.PublicationYear}}</p>
+      <script>
+        var conn = new WebSocket("ws://localhost:8080/ws");
 
-                        <!-- Edit Button -->
-                        <a href="/edit-book?title={{.Title}}" class="btn btn-primary" role="button">Edit Book</a>
-
-                        <!-- Delete Button -->
-                        <form action="/delete-book" method="post" class="mt-3">
-                            <input type="hidden" name="title" value="{{.Title}}" />
-                            <input
-                                    type="submit"
-                                    class="btn btn-danger"
-                                    value="Delete Book"
-                            />
-                        </form>
-                    </div>
-                </div>
-            </div>
-            {{end}}
-        </div>
+        conn.onmessage = function (event) {
+          var chatList = document.getElementById("active-chats");
+          var chatData = JSON.parse(event.data);
+          var chat = document.createElement("div");
+          chat.textContent =
+            "Chat with " + chatData.clientID + " - " + chatData.chatID;
+          var joinButton = document.createElement("button");
+          joinButton.textContent = "Join Chat";
+          joinButton.onclick = function () {
+            window.location.href = "/chat?chatID=" + chatData.chatID;
+          };
+          chat.appendChild(joinButton);
+          chatList.appendChild(chat);
+        };
+      </script>
     </div>
-
 
 
 </div>
@@ -77,4 +68,6 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </body>
+</html>
+  </body>
 </html>
