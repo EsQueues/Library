@@ -38,10 +38,10 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		username = ""
 	}
 
-	// Parse the HTML template
+	// Parse the HTML templates
 	tmpl := template.Must(template.ParseFiles("index.html"))
 
-	// Execute the template with the username data
+	// Execute the templates with the username data
 	err = tmpl.Execute(w, struct{ Username string }{Username: username})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

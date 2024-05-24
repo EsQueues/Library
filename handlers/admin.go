@@ -249,11 +249,11 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 
 		start := time.Now()
 
-		//err = sendMailSimple(subject, body, emails)
+		err = sendMailSimple(subject, body, emails)
 		//err = sendMailConcurrent(subject, body, emails, 1)
 		//err = sendMailConcurrent(subject, body, emails, 10)
 		//err = sendMailConcurrent(subject, body, emails, 100)
-		err = sendMailConcurrent(subject, body, emails, 1000)
+		//err = sendMailConcurrent(subject, body, emails, 1000)
 
 		if err != nil {
 			http.Error(w, "Error sending email", http.StatusInternalServerError)
@@ -325,41 +325,90 @@ func sendMailSimple(subject string, body string, to []string) error {
 }
 
 func sendMailConcurrent(subject string, body string, to []string, numWorkers int) error {
-	auth := smtp.PlainAuth(
-		"",
-		"saiat.kusainov05@gmail.com",
-		"mvip fblq yhtq gwqa",
-		"smtp.gmail.com")
+	// Define the SMTP server information
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+	fromEmail := "saiat.kusainov05@gmail.com"
+	password := "your-password" // Replace with your actual password or use an environment variable
 
-	msg := "Subject: " + subject + "\n" + body
+	// Set up authentication information.
+	auth := smtp.PlainAuth("", fromEmail, password, smtpHost)
 
-	var wg sync.WaitGroup
+	// Prepare the message.
+	msg := []byte("Subject: " + subject + "\r\n\r\n" + body)
+
+	// Create a channel to limit concurrent goroutines.
 	semaphore := make(chan struct{}, numWorkers)
 
+	// WaitGroup to wait for all goroutines to finish.
+	var wg sync.WaitGroup
+
+	// Loop over the recipients and send emails concurrently.
 	for _, recipient := range to {
 		wg.Add(1)
 		semaphore <- struct{}{} // Acquire a worker slot
+
 		go func(recipient string) {
-			defer func() {
-				<-semaphore // Release the worker slot
-				wg.Done()
-			}()
+			defer wg.Done()                // Signal that the goroutine is finished.
+			defer func() { <-semaphore }() // Release the worker slot.
 
-			err := smtp.SendMail(
-				"smtp.gmail.com:587",
-				auth,
-				"saiat.kusainov05@gmail.com",
-				[]string{recipient},
-				[]byte(msg),
-			)
-
+			// Send the email.
+			err := smtp.SendMail(smtpHost+":"+smtpPort, auth, fromEmail, []string{recipient}, msg)
 			if err != nil {
 				fmt.Printf("Error sending email to %s: %v\n", recipient, err)
+				// Handle the error according to your needs.
 			}
 		}(recipient)
 	}
 
+	// Wait for all goroutines to finish.
 	wg.Wait()
 
 	return nil
+}
+
+// Delete a message from the database
+func deleteMessageFromDatabase(timestamp string) error {
+	collection := database.Client.Database("project").Collection("messages")
+	filter := bson.M{"timestamp": timestamp}
+	_, err := collection.DeleteOne(context.Background(), filter)
+	return err
+}
+
+func DeleteMessageHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the form data
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Extract message timestamps from the form values
+	timestamps := r.Form["timestamp"]
+
+	// Create a channel to receive errors from goroutines
+	errCh := make(chan error, len(timestamps))
+
+	// Iterate over the message timestamps and delete each message concurrently
+	for _, timestamp := range timestamps {
+		go func(timestamp string) {
+			err := deleteMessageFromDatabase(timestamp)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			errCh <- nil // Signal successful deletion
+		}(timestamp)
+	}
+
+	// Wait for all goroutines to finish and collect errors
+	for range timestamps {
+		if err := <-errCh; err != nil {
+			http.Error(w, "Failed to delete message: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Respond with success message
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
