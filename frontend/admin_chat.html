@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Admin Chat</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+    <style>
+        hr {
+            border: none;
+            height: 1px;
+            background-color: #ccc;
+            margin: 20px 0;
+        }
+        #chat {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ccc;
+            overflow-y: scroll;
+            margin-top: 20px;
+            padding: 10px;
+        }
+        #message {
+            width: calc(100% - 100px);
+            display: inline-block;
+        }
+        #sendButton {
+            display: inline-block;
+        }
+        .chat-rules {
+            color: red;
+            font-weight: bold;
+            font-size: 24px;
+        }
+        .recommendation {
+            cursor: pointer;
+            color: blue;
+            text-decoration: underline;
+        }
+        .delete-button {
+            color: red;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="container mt-5">
+<div class="text-center">
+    <h1>Admin Chat</h1>
+
+    <div id="chat"></div>
+    <input type="text" id="message" placeholder="Type a message..." />
+    <button id="sendButton" class="btn btn-primary" onclick="sendMessage()">
+        Send
+    </button>
+</div>
+
+<script>
+    var conn = new WebSocket("ws://localhost:8080/ws?username=admin");
+
+    conn.onopen = function() {
+        console.log("WebSocket connection established");
+    };
+
+    conn.onerror = function(error) {
+        console.error("WebSocket error:", error);
+    };
+
+    conn.onclose = function() {
+        console.log("WebSocket connection closed");
+    };
+
+    conn.onmessage = function(event) {
+        var chat = document.getElementById("chat");
+        var messageData;
+
+        try {
+            messageData = JSON.parse(event.data);
+            console.log("Received message:", messageData);
+        } catch (e) {
+            console.error("Invalid JSON:", event.data);
+            return;
+        }
+
+        if (messageData.Username && messageData.Content) {
+            var message = document.createElement("div");
+            message.setAttribute("data-timestamp", messageData.Timestamp); // Add data attribute
+            var deleteButton = document.createElement("span");
+            deleteButton.className = "delete-button";
+            deleteButton.innerHTML = " &#10060;"; // Unicode for cross mark
+            deleteButton.onclick = function() {
+                deleteMessage(messageData.Timestamp);
+            };
+            message.innerHTML = `<strong>${messageData.Username}:</strong> ${messageData.Content}`;
+            message.appendChild(deleteButton);
+            chat.appendChild(message);
+            chat.scrollTop = chat.scrollHeight; // Scroll to the bottom
+        }
+    };
+
+    function sendMessage() {
+        var input = document.getElementById("message");
+        var msg = {
+            SenderID: "admin",
+            Username: "admin",
+            Content: input.value,
+            Timestamp: new Date().toISOString(),
+        };
+
+        try {
+            conn.send(JSON.stringify(msg));
+            console.log("Sent message:", msg);
+        } catch (e) {
+            console.error("Failed to send message:", e);
+        }
+
+        input.value = "";
+    }
+
+    function deleteMessage(timestamp) {
+        // Remove the deleted message from the chat UI
+        var deletedMessage = document.querySelector(`div[data-timestamp="${timestamp}"]`);
+        if (deletedMessage) {
+            deletedMessage.parentNode.removeChild(deletedMessage);
+        } else {
+            console.error("Message not found:", timestamp);
+        }
+    }
+</script>
+
+</body>
+</html>

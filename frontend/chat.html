@@ -1,5 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+  <title>Book Discussion Chat</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <style>
+    hr {
+      border: none;
+      height: 1px;
+      background-color: #ccc;
+      margin: 20px 0;
+    }
+    #chat {
+      width: 100%;
+      height: 400px;
+      border: 1px solid #ccc;
+      overflow-y: scroll;
+      margin-top: 20px;
+      padding: 10px;
+    }
+    #message {
+      width: calc(100% - 100px);
+      display: inline-block;
+    }
+    #sendButton {
+      display: inline-block;
+    }
+    .chat-rules {
+      color: red;
+      font-weight: bold;
+      font-size: 24px;
+    }
+    .recommendation {
+      cursor: pointer;
+      color: blue;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body class="container mt-5">
+<div class="text-center">
+  <h1>Book Discussion Chat</h1>
+
+  <div id="chat"></div>
+  <input type="text" id="message" placeholder="Type a message..." />
+  <button id="sendButton" class="btn btn-primary" onclick="sendMessage()">
+    Send
+  </button>
+</div>
+<!-- Recommended messages -->
+<div class="text-center mt-3">
+  <p>Recommended Messages:</p>
+  <button class="btn btn-link recommendation" onclick="addRecommendedMessage('Hi guys, what is your favorite book?')">Ask about favorite books</button>
+  <button class="btn btn-link recommendation" onclick="addRecommendedMessage('My favorite genre is fantasy. What about you?')">Share favorite genre</button>
+  <button class="btn btn-link recommendation" onclick="addRecommendedMessage('My name is ...., Im a book lover, and my best book is... I love kazakh history books....')">Introduce yourself</button>
+  <button class="btn btn-link recommendation" onclick="addRecommendedMessage('Hi people, i wanna ask some advice from you for book on this evening, I wanna read for relax')">Ask about book for evening</button>
+  <button class="btn btn-link recommendation" onclick="addRecommendedMessage('Hi guys, i wanna ask what book do you recommend for kids in range 6-10')">For kids</button>
+  <button class="btn btn-link recommendation" onclick="addRecommendedMessage('Hey guys, how can i order book from this library website!')">Ask question for this website</button>
+
+  <!-- Add more recommended messages as needed -->
+</div>
+
+<hr>
+<div class="chat-rules">
+  <p>Chat Rules:</p>
+  <ul>
+    <li>No racism or hate speech 😊</li>
+    <li>Be respectful to others ✌️</li>
+    <li>No spamming 🚫</li>
+    <li>Keep conversations relevant to books 📚</li>
+  </ul>
+</div>
+<hr>
+<script>
+  var username = prompt("Enter your username:");
+  if (!username) {
+    username = "Anonymous";
+  }
+
+  var conn = new WebSocket("ws://localhost:8080/ws?username=" + encodeURIComponent(username));
+
+  conn.onopen = function() {
+    console.log("WebSocket connection established");
+  };
+
+  conn.onerror = function(error) {
+    console.error("WebSocket error:", error);
+  };
+
+  conn.onclose = function() {
+    console.log("WebSocket connection closed");
+  };
+
+  conn.onmessage = function(event) {
+    var chat = document.getElementById("chat");
+    var messageData;
+
+    try {
+      messageData = JSON.parse(event.data);
+      console.log("Received message:", messageData);
+    } catch (e) {
+      console.error("Invalid JSON:", event.data);
+      return;
+    }
+
+    if (messageData.Username && messageData.Content) {
+      var message = document.createElement("div");
+      message.innerHTML = `<strong>${messageData.Username}:</strong> ${messageData.Content}`;
+      chat.appendChild(message);
+      chat.scrollTop = chat.scrollHeight; // Scroll to the bottom
+    }
+  };
+
+  function sendMessage() {
+    var input = document.getElementById("message");
+    var msg = {
+      SenderID: "client", // replace with actual sender info
+      Username: username,
+      Content: input.value,
+      Timestamp: new Date().toISOString(),
+    };
+
+    try {
+      conn.send(JSON.stringify(msg));
+      console.log("Sent message:", msg);
+    } catch (e) {
+      console.error("Failed to send message:", e);
+    }
+
+    input.value = "";
+  }
+
+  // Function to handle adding recommended messages to the input field
+  function addRecommendedMessage(message) {
+    var input = document.getElementById("message");
+    input.value = message;
+  }
+</script>
+
+</body>
   <head>
     <title>Chat</title>
     <meta charset="UTF-8" />

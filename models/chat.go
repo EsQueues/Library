@@ -12,6 +12,7 @@ type Chat struct {
 
 type Message struct {
 	SenderID  string
+	Username  string `json:"Username"`
 	Content   string
 	Timestamp time.Time
 }

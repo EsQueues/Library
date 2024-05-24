@@ -1,5 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Homepage</title>
+  <link
+          rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+  />
+</head>
+
+<body class="container mt-4">
+<div class="row mb-4">
+  <div class="col">
+    <h1>Welcome to the Homepage</h1>
+  </div>
+  <div class="col-md-3 text-right" id="auth-buttons">
+    <!-- Authentication buttons will be injected here by JavaScript -->
+  </div>
+</div>
+
+<form action="/filtered-books" method="get" class="mb-4">
+  <div class="form-row align-items-end">
+    <div class="col-md-4 mb-2">
+      <label for="filter">Filter by Title:</label>
+      <input
+              type="text"
+              id="filter"
+              name="filter"
+              class="form-control"
+              placeholder="Enter title"
+      />
+    </div>
+    <div class="col-md-4 mb-2">
+      <label for="sort">Sort:</label>
+      <select id="sort" name="sort" class="form-control">
+        <option value="title">By Title</option>
+        <option value="author">By Author</option>
+        <option value="genre">By Genre</option>
+        <option value="publicationYear">By Publication Year</option>
+      </select>
+    </div>
+    <div class="col-md-4 mb-2">
+      <button type="submit" class="btn btn-primary">Apply</button>
+    </div>
+  </div>
+</form>
+
+<hr />
+
+<div id="filtered-books"></div>
+
+<div id="pagination" class="mt-4">
+  <button onclick="previousPage()" class="btn btn-outline-primary">
+    Previous
+  </button>
+  <span id="currentPage" class="mx-2">1</span>
+  <button onclick="nextPage()" class="btn btn-outline-primary">Next</button>
+</div>
+
+<script>
+  let currentPage = 1;
+=======
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -69,6 +131,31 @@
         const filterValue = document.getElementById("filter").value;
         const sortValue = document.getElementById("sort").value;
 
+    fetch(
+            `/filtered-books?filter=${filterValue}&sort=${sortValue}&page=${currentPage}`
+    )
+            .then((response) => response.json())
+            .then((books) => {
+              document.getElementById("filtered-books").innerHTML = "";
+
+              books.forEach((book) => {
+                const bookElement = document.createElement("div");
+                bookElement.innerHTML = `<strong>Title:</strong> ${book.title}<br>
+          <strong>Author:</strong> ${book.author} <br>
+          <strong>Genre:</strong> ${book.genre} <br>
+          <strong>Publication Year:</strong> ${book.publicationYear}<br>
+          <hr>`;
+
+                document
+                        .getElementById("filtered-books")
+                        .appendChild(bookElement);
+              });
+
+              updatePageNumber();
+            })
+            .catch((error) => {
+              console.error("Error fetching filtered books:", error);
+
         fetch(
           `/filtered-books?filter=${filterValue}&sort=${sortValue}&page=${currentPage}`
         )
@@ -117,6 +204,50 @@
         });
 
       fetchAndDisplayBooks();
+    }
+  }
+
+  document
+          .querySelector("form")
+          .addEventListener("submit", function (event) {
+            event.preventDefault();
+            currentPage = 1;
+            fetchAndDisplayBooks();
+          });
+
+  fetchAndDisplayBooks();
+
+  // Get the username from the URL query parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get("username");
+
+  const authButtonsDiv = document.getElementById("auth-buttons");
+
+  if (username) {
+    // If username exists, display it as a link to the profile page and the Create Chat button
+    const profileLink = document.createElement("a");
+    profileLink.href = "/profile";
+    profileLink.classList.add("btn", "btn-secondary", "ml-2");
+    profileLink.textContent = username;
+
+    const createChatButton = document.createElement("a");
+    createChatButton.href = "/chat";
+    createChatButton.classList.add("btn", "btn-info", "mt-3", "mr-2");
+    createChatButton.textContent = "Connect to Chat";
+
+    authButtonsDiv.appendChild(createChatButton);
+    authButtonsDiv.appendChild(profileLink);
+  } else {
+    // If username doesn't exist, display the sign-in button
+    const signInButton = document.createElement("a");
+    signInButton.href = "/login";
+    signInButton.classList.add("btn", "btn-secondary", "ml-2");
+    signInButton.textContent = "Sign In";
+    authButtonsDiv.appendChild(signInButton);
+  }
+</script>
+</body>
+
     </script>
     <div class="col-md-3 text-right">
       <script>
