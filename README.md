@@ -10,6 +10,7 @@ User can only sign in after registration only by his real email, by proving 6-x 
 ```
 $ git clone https://github.com/EsQueues/Book-management-system.git
 $ cd website
+$ go run main.go
 ```
 
 ## Stack
