@@ -1,5 +1,5 @@
 
-## README
+## BOOK MANAGEMENT SYSTEM
 Website where user can choose books by filtering by name, genre, year or author
 Admin can send newsletter to all user in admin page
 User can only sign in after registration only by his real email, by proving 6-x code. 
@@ -8,7 +8,6 @@ User can only sign in after registration only by his real email, by proving 6-x 
 ## Installation
 ### Clone the project
 ```
-You should have IDE like VSCode or GoLand(recomend)
 $ git clone https://github.com/EsQueues/Book-management-system.git
 $ cd website
 ```
