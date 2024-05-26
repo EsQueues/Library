@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"html/template"
@@ -411,4 +413,48 @@ func DeleteMessageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with success message
 	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+
+func generateID() string {
+	return uuid.New().String()
+}
+
+func CreateChatRoomHandler(w http.ResponseWriter, r *http.Request) {
+	var chat models.Chat
+	if err := json.NewDecoder(r.Body).Decode(&chat); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	chat.ID = generateID()
+	chat.Active = true
+
+	collection := database.Client.Database("project").Collection("chats")
+	_, err := collection.InsertOne(context.Background(), chat)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with a success message
+	response := map[string]interface{}{
+		"success": true,
+		"message": "Chat room created successfully",
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+}
+
+func DeleteChatRoomHandler(w http.ResponseWriter, r *http.Request) {
+	chatID := r.URL.Query().Get("id")
+	collection := database.Client.Database("project").Collection("chats")
+	filter := bson.M{"id": chatID}
+
+	_, err := collection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

@@ -27,20 +27,6 @@
         #sendButton {
             display: inline-block;
         }
-        .chat-rules {
-            color: red;
-            font-weight: bold;
-            font-size: 24px;
-        }
-        .recommendation {
-            cursor: pointer;
-            color: blue;
-            text-decoration: underline;
-        }
-        .delete-button {
-            color: red;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body class="container mt-5">
@@ -54,22 +40,46 @@
     </button>
 </div>
 
+<hr />
+
+<div class="text-center">
+    <h2>Create Chat Room</h2>
+    <input type="text" id="chatRoomName" placeholder="Chat Room Name" />
+    <button class="btn btn-success" onclick="createChatRoom()">Create</button>
+</div>
+
+<hr />
+
+<div class="text-center">
+    <h2>Connect to Chat Room</h2>
+    <select id="chatRoomList"></select>
+    <button class="btn btn-primary" onclick="connectToChat()">Connect</button>
+</div>
+
+<hr />
+
+<div class="text-center">
+    <h2>Delete Chat Room</h2>
+    <select id="deleteChatRoomList"></select>
+    <button class="btn btn-danger" onclick="deleteChatRoom()">Delete</button>
+</div>
+
 <script>
     var conn = new WebSocket("ws://localhost:8080/ws?username=admin");
 
-    conn.onopen = function() {
+    conn.onopen = function () {
         console.log("WebSocket connection established");
     };
 
-    conn.onerror = function(error) {
+    conn.onerror = function (error) {
         console.error("WebSocket error:", error);
     };
 
-    conn.onclose = function() {
+    conn.onclose = function () {
         console.log("WebSocket connection closed");
     };
 
-    conn.onmessage = function(event) {
+    conn.onmessage = function (event) {
         var chat = document.getElementById("chat");
         var messageData;
 
@@ -87,7 +97,7 @@
             var deleteButton = document.createElement("span");
             deleteButton.className = "delete-button";
             deleteButton.innerHTML = " &#10060;"; // Unicode for cross mark
-            deleteButton.onclick = function() {
+            deleteButton.onclick = function () {
                 deleteMessage(messageData.Timestamp);
             };
             message.innerHTML = `<strong>${messageData.Username}:</strong> ${messageData.Content}`;
@@ -125,6 +135,94 @@
             console.error("Message not found:", timestamp);
         }
     }
+
+    function createChatRoom() {
+        var chatRoomName = document.getElementById("chatRoomName").value;
+
+        fetch('/admin/createChatRoom', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({name: chatRoomName})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create chat room');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    loadChatRooms();
+                } else {
+                    alert("Failed to create chat room");
+                }
+            })
+            .catch(error => {
+                console.error("Error creating chat room:", error);
+                alert("Failed to create chat room");
+            });
+    }
+
+    function connectToChat() {
+        var chatRoomList = document.getElementById("chatRoomList");
+        var selectedChatRoom = chatRoomList.value;
+
+        // Connect to the selected chat room
+        // You need to implement this functionality
+        console.log("Connecting to chat room:", selectedChatRoom);
+    }
+
+    function deleteChatRoom() {
+        var deleteChatRoomList = document.getElementById("deleteChatRoomList");
+        var selectedChatRoom = deleteChatRoomList.value;
+
+        fetch('/admin/deleteChatRoom', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({id: selectedChatRoom})
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Chat room deleted successfully");
+                    loadChatRooms();
+                } else {
+                    alert("Failed to delete chat room");
+                }
+            })
+            .catch(error => console.error("Error deleting chat room:", error));
+    }
+
+    function loadChatRooms() {
+        fetch('/chat-rooms')
+            .then(response => response.json())
+            .then(chatRooms => {
+                var chatRoomList = document.getElementById("chatRoomList");
+                var deleteChatRoomList = document.getElementById("deleteChatRoomList");
+
+                // Clear previous options
+                chatRoomList.innerHTML = "";
+                deleteChatRoomList.innerHTML = "";
+
+                // Add options for each chat room
+                chatRooms.forEach(room => {
+                    var option = document.createElement("option");
+                    option.value = room.ID;
+                    option.textContent = room.Name;
+
+                    // Add options to both dropdowns
+                    chatRoomList.appendChild(option.cloneNode(true));
+                    deleteChatRoomList.appendChild(option);
+                });
+            })
+            .catch(error => console.error("Error fetching chat rooms:", error));
+    }
+
 </script>
 
 </body>

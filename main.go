@@ -40,6 +40,12 @@ func main() {
 	r.HandleFunc("/ws", serveWs).Methods("GET")
 	r.HandleFunc("/delete-message", handlers.DeleteMessageHandler).Methods("POST")
 
+	r.HandleFunc("/chat-rooms", handlers.ListChatRoomsHandler).Methods("GET")
+
+	// New handlers for chat room creation and deletion
+	r.HandleFunc("/admin/createChatRoom", handlers.CreateChatRoomHandler).Methods("POST")
+	r.HandleFunc("/admin/deleteChatRoom", handlers.DeleteChatRoomHandler).Methods("POST")
+
 	r.HandleFunc("/admin-chat", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "frontend/admin_chat.html")
 	}).Methods("GET")
@@ -76,6 +82,10 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 	if username == "" {
 		username = "Anonymous"
 	}
+	roomID := r.URL.Query().Get("roomID")
+	if roomID == "" {
+		roomID = "default"
+	}
 
-	handlers.HandleConnection(conn, username)
+	handlers.HandleConnection(conn, username, roomID)
 }
