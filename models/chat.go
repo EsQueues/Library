@@ -4,7 +4,7 @@ import "time"
 
 type Chat struct {
 	ID       string
-	ClientID string
+	Name     string
 	AdminID  string
 	Messages []Message
 	Active   bool

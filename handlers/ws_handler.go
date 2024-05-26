@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"log"
-	"net/http"
 	"sync"
 	"website/database"
 	"website/models"
@@ -12,21 +11,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
 var (
 	clients   = make(map[*websocket.Conn]bool)
 	mutex     sync.Mutex
 	broadcast = make(chan models.Message)
 )
 
-func HandleConnection(conn *websocket.Conn, username string) {
-	// Load previous messages from MongoDB
-	loadPreviousMessages(conn)
+func HandleConnection(conn *websocket.Conn, username string, chatID string) {
+	// Load previous messages from MongoDB for the specific chat room
+	loadPreviousMessages(conn, chatID)
 
 	// Register new client
 	clients[conn] = true
@@ -48,12 +41,11 @@ func HandleConnection(conn *websocket.Conn, username string) {
 		// Add the username to the message
 		msg.Username = username
 		// Save the message to MongoDB
-		saveMessage(msg)
-		// Broadcast the message to all clients
+		saveMessage(msg, chatID)
+		// Broadcast the message to all clients in the chat room
 		broadcast <- msg
 	}
 }
-
 func HandleMessages() {
 	for {
 		msg := <-broadcast
@@ -69,17 +61,16 @@ func HandleMessages() {
 		mutex.Unlock()
 	}
 }
-
-func saveMessage(msg models.Message) {
-	collection := database.Client.Database("project").Collection("messages")
+func saveMessage(msg models.Message, chatID string) {
+	collection := database.Client.Database("project").Collection("messages" + chatID)
 	_, err := collection.InsertOne(context.Background(), msg)
 	if err != nil {
 		log.Println("Error saving message to MongoDB:", err)
 	}
 }
 
-func loadPreviousMessages(conn *websocket.Conn) {
-	collection := database.Client.Database("project").Collection("messages")
+func loadPreviousMessages(conn *websocket.Conn, chatID string) {
+	collection := database.Client.Database("project").Collection("messages" + chatID)
 	cursor, err := collection.Find(context.Background(), bson.M{})
 	if err != nil {
 		log.Println("Error loading previous messages from MongoDB:", err)
