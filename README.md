@@ -1,43 +1,64 @@
-#Book management system
------------------------
-###The  Book Management System is a project that helps users manage their book collections effectively. 
-###The application allows users to add, edit, delete, and search for books in their collection. It also provides features like user authentication, user roles, and access control to ensure that the system is secure. Target users are students, teachers and librarians.
------------------------
-###Sayat Kusain, SE-2208
-###Almas Amrenov, SE-2208
-----------------------
-First page:
-![image](https://github.com/EsQueues/authorization-system/assets/122588120/43995b3a-7339-4210-b9da-32b8f9d52abf)
-----------------------
-##Instruction to install:
-1.
-go get -u github.com/gorilla/mux
-go get -u go.mongodb.org/mongo-driver/mongo
-2.
-MongoDB server is up and running on localhost:27017.
-3.
-go run main.go
-4.
-http://localhost:8080
-5.
->Register a User:
-Click on the "Register" link on the webpage.
-Fill in the registration form and submit.
 
->Login:
-Click on the "Login" link on the webpage.
-Enter the username and password used during registration.
+## BOOK MANAGEMENT SYSTEM
+Website where user can choose books by filtering by name, genre, year or author
+Admin can send newsletter to all user in admin page
+User can only sign in after registration only by his real email, by proving 6-x code. 
 
->Profile Page:
-After successful login, you'll be redirected to the profile page displaying user information.
 
->Edit Profile:
-Click on the "Edit" link to modify your profile details.
+## Installation
+### Clone the project
+```
+$ git clone https://github.com/EsQueues/Book-management-system.git
+$ cd website
+$ go run main.go
+```
 
->Update Profile:
-After editing, click on the "Update" button to save the changes.
+## Stack
+### Backend
+- Golang
+- MongoDB
 
->Delete Profile:
-Click on the "Delete" link to delete your user profile.
+### Frontend
+- HTML 5
+- Bootstrap 5
+- JavaScript
 
-##Tools
+## Test
+- 1 E2E test
+- 1 Unit test
+- 1 Integration test
+
+## Usage
+
+### Main Page Without Signing In
+![Main Page](https://github.com/EsQueues/Book-management-system/assets/122588120/b493b779-48eb-444a-982e-50d104bcb7bc)
+
+### Sorting System
+![Sorting System](https://github.com/EsQueues/Book-management-system/assets/122588120/17636d82-f7cd-4c91-ac59-db4e3b873f63)
+
+### Pagination
+![Pagination](https://github.com/EsQueues/Book-management-system/assets/122588120/58d98f39-1d12-40a2-bca7-07a381b37e02)
+
+### Login Page
+![Login Page](https://github.com/EsQueues/Book-management-system/assets/122588120/64de8713-2d43-4399-9547-217a2ee449e3)
+
+### Registration
+![Registration](https://github.com/EsQueues/Book-management-system/assets/122588120/a7212763-a060-4a77-aac2-16aafaca76e8)
+
+### Confirmation Email
+![Confirmation Email](https://github.com/EsQueues/Book-management-system/assets/122588120/a85f24d5-2b0d-4a87-a817-f200f666fc33)
+
+### Gmail
+![Gmail](https://github.com/EsQueues/Book-management-system/assets/122588120/4eb2ae90-684a-43bf-9bdf-67ad5989bfc5)
+![Gmail](https://github.com/EsQueues/Book-management-system/assets/122588120/2635579a-6b69-4fde-a83b-5d26aa1af9ec)
+
+### After Signing In
+![After Signing In](https://github.com/EsQueues/Book-management-system/assets/122588120/4557fccb-b61b-4250-931c-a49eaf3ee414)
+
+### Profile Management
+![Profile Management](https://github.com/EsQueues/Book-management-system/assets/122588120/2f8bf1b5-39fd-4daa-971b-9f325943f00c)
+
+
+
+
+
