@@ -435,6 +435,10 @@ func CreateChatRoomHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create a new collection for the chat room's messages
+	messageCollectionName := "messages_" + chat.ID
+	database.Client.Database("project").CreateCollection(context.Background(), messageCollectionName)
+
 	// Respond with a success message
 	response := map[string]interface{}{
 		"success": true,
@@ -446,15 +450,23 @@ func CreateChatRoomHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteChatRoomHandler(w http.ResponseWriter, r *http.Request) {
-	chatID := r.URL.Query().Get("id")
-	collection := database.Client.Database("project").Collection("chats")
-	filter := bson.M{"id": chatID}
+	chatName := r.URL.Query().Get("name")
 
-	_, err := collection.DeleteOne(context.Background(), filter)
+	// Delete the chat room
+	chatCollection := database.Client.Database("project").Collection("chats")
+	filter := bson.M{"id": chatName}
+	result, err := chatCollection.DeleteOne(context.Background(), filter)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	if result.DeletedCount == 0 {
+		http.Error(w, "Chat room not found", http.StatusNotFound)
+		return
+	}
+
+	// Send a success response
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Chat room deleted successfully"))
 }

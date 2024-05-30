@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"log"
+	"net/http"
 	"sync"
 	"website/database"
 	"website/models"
@@ -12,48 +13,54 @@ import (
 )
 
 var (
+	upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
 	clients   = make(map[*websocket.Conn]bool)
 	mutex     sync.Mutex
 	broadcast = make(chan models.Message)
 )
 
 func HandleConnection(conn *websocket.Conn, username string, chatID string) {
-	// Load previous messages from MongoDB for the specific chat room
-	loadPreviousMessages(conn, chatID)
+	defer conn.Close()
 
-	// Register new client
+	mutex.Lock()
 	clients[conn] = true
+	mutex.Unlock()
+
 	defer func() {
 		mutex.Lock()
 		delete(clients, conn)
 		mutex.Unlock()
-		conn.Close()
 	}()
 
-	// Read messages from the client
+	loadPreviousMessages(conn, chatID)
+
 	for {
 		var msg models.Message
 		err := conn.ReadJSON(&msg)
 		if err != nil {
-			log.Println("Error reading message:", err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
+				log.Printf("Error reading message: %v", err)
+			}
 			break
 		}
-		// Add the username to the message
 		msg.Username = username
-		// Save the message to MongoDB
+		msg.ChatID = chatID
 		saveMessage(msg, chatID)
-		// Broadcast the message to all clients in the chat room
 		broadcast <- msg
 	}
 }
+
 func HandleMessages() {
-	for {
-		msg := <-broadcast
+	for msg := range broadcast {
 		mutex.Lock()
 		for client := range clients {
 			err := client.WriteJSON(msg)
 			if err != nil {
-				log.Println("Error writing message:", err)
+				log.Printf("Error writing message: %v", err)
 				client.Close()
 				delete(clients, client)
 			}
@@ -61,19 +68,20 @@ func HandleMessages() {
 		mutex.Unlock()
 	}
 }
+
 func saveMessage(msg models.Message, chatID string) {
-	collection := database.Client.Database("project").Collection("messages" + chatID)
+	collection := database.Client.Database("project").Collection("messages_" + chatID)
 	_, err := collection.InsertOne(context.Background(), msg)
 	if err != nil {
-		log.Println("Error saving message to MongoDB:", err)
+		log.Printf("Error saving message to MongoDB: %v", err)
 	}
 }
 
 func loadPreviousMessages(conn *websocket.Conn, chatID string) {
-	collection := database.Client.Database("project").Collection("messages" + chatID)
+	collection := database.Client.Database("project").Collection("messages_" + chatID)
 	cursor, err := collection.Find(context.Background(), bson.M{})
 	if err != nil {
-		log.Println("Error loading previous messages from MongoDB:", err)
+		log.Printf("Error loading previous messages: %v", err)
 		return
 	}
 	defer cursor.Close(context.Background())
@@ -81,16 +89,17 @@ func loadPreviousMessages(conn *websocket.Conn, chatID string) {
 	for cursor.Next(context.Background()) {
 		var msg models.Message
 		if err := cursor.Decode(&msg); err != nil {
-			log.Println("Error decoding message from MongoDB:", err)
+			log.Printf("Error decoding message: %v", err)
 			continue
 		}
-		err = conn.WriteJSON(msg)
-		if err != nil {
-			log.Println("Error sending previous message to client:", err)
+		if err := conn.WriteJSON(msg); err != nil {
+			log.Printf("Error sending previous message: %v", err)
+		} else {
+			log.Printf("Sent previous message: %+v", msg) // Add this line for logging
 		}
 	}
 	if err := cursor.Err(); err != nil {
-		log.Println("Cursor error:", err)
+		log.Printf("Cursor error: %v", err)
 	}
 }
 =======
