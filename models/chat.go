@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
+)
 
 type Chat struct {
 	ID       string
@@ -11,8 +14,10 @@ type Chat struct {
 }
 
 type Message struct {
-	SenderID  string
-	Username  string `json:"Username"`
-	Content   string
-	Timestamp time.Time
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	ChatID    string             `bson:"chat_id"`
+	SenderID  string             `bson:"sender_id"`
+	Username  string             `bson:"username"`
+	Content   string             `bson:"content"`
+	Timestamp time.Time          `bson:"timestamp"`
 }

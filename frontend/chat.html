@@ -61,7 +61,7 @@
     <p>Recommended Messages:</p>
     <button class="btn btn-link recommendation" onclick="addRecommendedMessage('Hi guys, what is your favorite book?')">Ask about favorite books</button>
     <button class="btn btn-link recommendation" onclick="addRecommendedMessage('My favorite genre is fantasy. What about you?')">Share favorite genre</button>
-    <button class="btn btn-link recommendation" onclick="addRecommendedMessage('My name is ...., I'm a book lover, and my best book is... I love Kazakh history books....')">Introduce yourself</button>
+    <button class="btn btn-link recommendation" onclick="addRecommendedMessage('My name is ...., I\'m a book lover, and my best book is... I love Kazakh history books....')">Introduce yourself</button>
     <button class="btn btn-link recommendation" onclick="addRecommendedMessage('Hi people, I wanna ask some advice from you for a book on this evening, I wanna read for relax')">Ask about book for evening</button>
     <button class="btn btn-link recommendation" onclick="addRecommendedMessage('Hi guys, I wanna ask what book do you recommend for kids in range 6-10')">For kids</button>
     <button class="btn btn-link recommendation" onclick="addRecommendedMessage('Hey guys, how can I order a book from this library website?')">Ask question for this website</button>
@@ -88,13 +88,13 @@
   var conn;
   var currentRoom;
 
-  function connectToChatRoom(room) {
-    currentRoom = room;
+  function connectToChatRoom(roomID) {
+    currentRoom = roomID;
     document.getElementById('chat-room-selection').style.display = 'none';
     document.getElementById('chat-room').style.display = 'block';
     document.getElementById('recommended-messages').style.display = 'block';
 
-    conn = new WebSocket("ws://localhost:8080/ws?username=" + encodeURIComponent(username) + "&room=" + encodeURIComponent(room));
+    conn = new WebSocket("ws://localhost:8080/ws?username=" + encodeURIComponent(username) + "&chatID=" + encodeURIComponent(roomID));
 
     conn.onopen = function() {
       console.log("WebSocket connection established");
@@ -109,34 +109,32 @@
     };
 
     conn.onmessage = function(event) {
-      var chat = document.getElementById("chat");
-      var messageData;
+      var message = JSON.parse(event.data);
+      console.log("Received message:", message); // Debugging
 
-      try {
-        messageData = JSON.parse(event.data);
-        console.log("Received message:", messageData);
-      } catch (e) {
-        console.error("Invalid JSON:", event.data);
-        return;
-      }
+      // Create a new element for the message
+      var messageElement = document.createElement("div");
+      messageElement.textContent = message["Username"] + ": " + message["Content"];
 
-      if (messageData.Username && messageData.Content) {
-        var message = document.createElement("div");
-        message.innerHTML = `<strong>${messageData.Username}:</strong> ${messageData.Content}`;
-        chat.appendChild(message);
-        chat.scrollTop = chat.scrollHeight; // Scroll to the bottom
-      }
+      // Append the message element to the chat container
+      var chatContainer = document.getElementById("chat");
+      chatContainer.appendChild(messageElement);
+
+      // Scroll to the bottom of the chat window
+      chatContainer.scrollTop = chatContainer.scrollHeight;
     };
+
+
   }
 
   function sendMessage() {
     var input = document.getElementById("message");
     var msg = {
-      SenderID: "client", // replace with actual sender info
-      Username: username,
-      Content: input.value,
-      Timestamp: new Date().toISOString(),
-      Room: currentRoom
+      senderID: "client", // replace with actual sender info
+      username: username,
+      content: input.value,
+      timestamp: new Date().toISOString(),
+      chatID: currentRoom
     };
 
     try {
@@ -166,7 +164,7 @@
                 roomElement.className = 'chat-room';
                 roomElement.textContent = room.Name;
                 roomElement.onclick = function() {
-                  connectToChatRoom(room.Name);
+                  connectToChatRoom(room.ID);
                 };
                 chatRoomContainer.appendChild(roomElement);
               });

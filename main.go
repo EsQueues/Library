@@ -11,6 +11,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
 func main() {
 	go handlers.HandleMessages()
 	r := mux.NewRouter()
@@ -44,7 +50,7 @@ func main() {
 
 	// New handlers for chat room creation and deletion
 	r.HandleFunc("/admin/createChatRoom", handlers.CreateChatRoomHandler).Methods("POST")
-	r.HandleFunc("/admin/deleteChatRoom", handlers.DeleteChatRoomHandler).Methods("POST")
+	r.HandleFunc("/admin/deleteChatRoom", handlers.DeleteChatRoomHandler).Methods("DELETE")
 
 	r.HandleFunc("/admin-chat", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "frontend/admin_chat.html")
@@ -69,11 +75,7 @@ func main() {
 }
 
 func serveWs(w http.ResponseWriter, r *http.Request) {
-	conn, err := (&websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
-	}).Upgrade(w, r, nil)
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Error upgrading to websocket:", err)
 		return
@@ -82,10 +84,10 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 	if username == "" {
 		username = "Anonymous"
 	}
-	roomID := r.URL.Query().Get("roomID")
-	if roomID == "" {
-		roomID = "default"
+	chatID := r.URL.Query().Get("chatID")
+	if chatID == "" {
+		chatID = "default"
 	}
 
-	handlers.HandleConnection(conn, username, roomID)
+	handlers.HandleConnection(conn, username, chatID)
 }

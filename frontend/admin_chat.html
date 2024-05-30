@@ -59,12 +59,18 @@
 <hr />
 
 <div class="text-center">
-    <h2>Delete Chat Room</h2>
+    <h2>Clear Chat History</h2>
     <select id="deleteChatRoomList"></select>
-    <button class="btn btn-danger" onclick="deleteChatRoom()">Delete</button>
+    <button class="btn btn-danger" onclick="deleteChatRoom()">Delete chat</button>
 </div>
 
+
+
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadChatRooms();
+    });
+
     var conn = new WebSocket("ws://localhost:8080/ws?username=admin");
 
     conn.onopen = function () {
@@ -177,30 +183,39 @@
 
     function deleteChatRoom() {
         var deleteChatRoomList = document.getElementById("deleteChatRoomList");
-        var selectedChatRoom = deleteChatRoomList.value;
+        var selectedChatRoomName = deleteChatRoomList.value;
 
-        fetch('/admin/deleteChatRoom', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({id: selectedChatRoom})
+        if (!selectedChatRoomName) {
+            console.error("No chat room selected for deletion.");
+            return;
+        }
+
+        fetch('/admin/deleteChatRoom?name=' + encodeURIComponent(selectedChatRoomName), {
+            method: 'DELETE',
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            .then(response => {
+                if (response.ok) {
                     alert("Chat room deleted successfully");
-                    loadChatRooms();
+                    loadChatRooms(); // Reload chat rooms to reflect the deletion
                 } else {
-                    alert("Failed to delete chat room");
+                    throw new Error('Failed to delete chat room');
                 }
             })
             .catch(error => console.error("Error deleting chat room:", error));
     }
 
+
+
+
+
     function loadChatRooms() {
         fetch('/chat-rooms')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch chat rooms');
+                }
+                return response.json();
+            })
             .then(chatRooms => {
                 var chatRoomList = document.getElementById("chatRoomList");
                 var deleteChatRoomList = document.getElementById("deleteChatRoomList");
@@ -209,7 +224,7 @@
                 chatRoomList.innerHTML = "";
                 deleteChatRoomList.innerHTML = "";
 
-                // Add options for each chat room
+                // Add options for each chat room to both dropdowns
                 chatRooms.forEach(room => {
                     var option = document.createElement("option");
                     option.value = room.ID;
@@ -217,11 +232,13 @@
 
                     // Add options to both dropdowns
                     chatRoomList.appendChild(option.cloneNode(true));
-                    deleteChatRoomList.appendChild(option);
+                    deleteChatRoomList.appendChild(option.cloneNode(true));
                 });
             })
             .catch(error => console.error("Error fetching chat rooms:", error));
     }
+
+
 
 </script>
 
