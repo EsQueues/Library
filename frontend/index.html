@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Homepage</title>
-  <link
-          rel="stylesheet"
-          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-  />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
 </head>
 
 <body class="container mt-4">
@@ -59,6 +56,12 @@
   <button onclick="nextPage()" class="btn btn-outline-primary">Next</button>
 </div>
 
+<!-- Shopping Cart Section -->
+<div class="mt-4">
+  <h2>Shopping Cart</h2>
+  <ul id="shopping-cart" class="list-group"></ul>
+</div>
+
 <script>
   let currentPage = 1;
 
@@ -70,24 +73,22 @@
     const filterValue = document.getElementById("filter").value;
     const sortValue = document.getElementById("sort").value;
 
-    fetch(
-            `/filtered-books?filter=${filterValue}&sort=${sortValue}&page=${currentPage}`
-    )
+    fetch(`/filtered-books?filter=${filterValue}&sort=${sortValue}&page=${currentPage}`)
             .then((response) => response.json())
             .then((books) => {
               document.getElementById("filtered-books").innerHTML = "";
 
               books.forEach((book) => {
                 const bookElement = document.createElement("div");
-                bookElement.innerHTML = `<strong>Title:</strong> ${book.title}<br>
-          <strong>Author:</strong> ${book.author} <br>
-          <strong>Genre:</strong> ${book.genre} <br>
-          <strong>Publication Year:</strong> ${book.publicationYear}<br>
-          <hr>`;
+                bookElement.innerHTML = `
+            <strong>Title:</strong> ${book.title}<br>
+            <strong>Author:</strong> ${book.author}<br>
+            <strong>Genre:</strong> ${book.genre}<br>
+            <strong>Publication Year:</strong> ${book.publicationYear}<br>
+            <button onclick="addToCart('${book.title}')" class="btn btn-primary mt-2">Add to Cart</button>
+            <hr>`;
 
-                document
-                        .getElementById("filtered-books")
-                        .appendChild(bookElement);
+                document.getElementById("filtered-books").appendChild(bookElement);
               });
 
               updatePageNumber();
@@ -95,6 +96,13 @@
             .catch((error) => {
               console.error("Error fetching filtered books:", error);
             });
+  }
+
+  function addToCart(bookTitle) {
+    const cartItem = document.createElement("li");
+    cartItem.className = "list-group-item";
+    cartItem.textContent = bookTitle;
+    document.getElementById("shopping-cart").appendChild(cartItem);
   }
 
   function nextPage() {
@@ -147,6 +155,8 @@
     signInButton.textContent = "Sign In";
     authButtonsDiv.appendChild(signInButton);
   }
+
+
 </script>
 </body>
 </html>

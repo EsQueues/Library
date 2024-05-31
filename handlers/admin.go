@@ -369,52 +369,6 @@ func sendMailConcurrent(subject string, body string, to []string, numWorkers int
 	return nil
 }
 
-// Delete a message from the database
-func deleteMessageFromDatabase(timestamp string) error {
-	collection := database.Client.Database("project").Collection("messages")
-	filter := bson.M{"timestamp": timestamp}
-	_, err := collection.DeleteOne(context.Background(), filter)
-	return err
-}
-
-func DeleteMessageHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse the form data
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Extract message timestamps from the form values
-	timestamps := r.Form["timestamp"]
-
-	// Create a channel to receive errors from goroutines
-	errCh := make(chan error, len(timestamps))
-
-	// Iterate over the message timestamps and delete each message concurrently
-	for _, timestamp := range timestamps {
-		go func(timestamp string) {
-			err := deleteMessageFromDatabase(timestamp)
-			if err != nil {
-				errCh <- err
-				return
-			}
-			errCh <- nil // Signal successful deletion
-		}(timestamp)
-	}
-
-	// Wait for all goroutines to finish and collect errors
-	for range timestamps {
-		if err := <-errCh; err != nil {
-			http.Error(w, "Failed to delete message: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	// Respond with success message
-	http.Redirect(w, r, "/admin", http.StatusSeeOther)
-}
-
 func generateID() string {
 	return uuid.New().String()
 }
@@ -469,4 +423,64 @@ func DeleteChatRoomHandler(w http.ResponseWriter, r *http.Request) {
 	// Send a success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Chat room deleted successfully"))
+}
+func ListChatRoomsHandler(w http.ResponseWriter, r *http.Request) {
+	client := database.Client
+	if client == nil {
+		http.Error(w, "MongoDB client is not initialized", http.StatusInternalServerError)
+		return
+	}
+
+	collection := client.Database("project").Collection("chats")
+	cursor, err := collection.Find(context.Background(), bson.M{})
+	if err != nil {
+		http.Error(w, "Failed to fetch chat rooms", http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(context.Background())
+
+	var chatRooms []models.Chat
+	if err = cursor.All(context.Background(), &chatRooms); err != nil {
+		http.Error(w, "Failed to fetch chat rooms", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(chatRooms)
+}
+
+type DeleteMessageRequest struct {
+	ChatID    string `json:"chatID"`
+	Timestamp string `json:"timestamp"`
+}
+
+func DeleteMessageHandler(w http.ResponseWriter, r *http.Request) {
+	var request DeleteMessageRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	client := database.Client
+	if client == nil {
+		http.Error(w, "MongoDB client is not initialized", http.StatusInternalServerError)
+		return
+	}
+
+	collectionName := "messages_" + request.ChatID
+	collection := client.Database("project").Collection(collectionName)
+
+	filter := bson.M{"timestamp": request.Timestamp}
+	result, err := collection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		http.Error(w, "Failed to delete message", http.StatusInternalServerError)
+		return
+	}
+
+	if result.DeletedCount == 0 {
+		http.Error(w, "Message not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
