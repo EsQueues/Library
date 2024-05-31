@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -10,7 +9,6 @@ import (
 	"math/rand"
 	"net/http"
 	"net/smtp"
-	"website/database"
 	"website/models"
 
 	"github.com/gorilla/sessions"
@@ -394,23 +392,4 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/profile", http.StatusSeeOther)
-}
-
-func ListChatRoomsHandler(w http.ResponseWriter, r *http.Request) {
-	collection := database.Client.Database("project").Collection("chats")
-	cursor, err := collection.Find(context.Background(), bson.M{})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cursor.Close(context.Background())
-
-	var chats []models.Chat
-	if err := cursor.All(context.Background(), &chats); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(chats)
 }

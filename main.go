@@ -25,7 +25,6 @@ func main() {
 		http.ServeFile(w, r, "frontend/index.html")
 	})
 
-	// Existing handlers
 	r.HandleFunc("/register", handlers.RegisterHandler).Methods("POST", "GET")
 	r.HandleFunc("/login", handlers.LoginHandler).Methods("POST", "GET")
 	r.HandleFunc("/profile", handlers.ProfileHandler).Methods("GET")
@@ -37,6 +36,7 @@ func main() {
 	r.HandleFunc("/email-confirmed", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "frontend/email-confirmed.html")
 	})
+
 	r.HandleFunc("/", handlers.IndexHandler)
 	r.HandleFunc("/message", handlers.MessageHandler).Methods("GET", "POST")
 	r.HandleFunc("/admin", handlers.AdminDashboardHandler).Methods("GET")
@@ -44,13 +44,13 @@ func main() {
 	r.HandleFunc("/delete-book", handlers.DeleteBookHandler).Methods("POST")
 	r.HandleFunc("/add-book", handlers.AddBookHandler).Methods("POST")
 	r.HandleFunc("/ws", serveWs).Methods("GET")
-	r.HandleFunc("/delete-message", handlers.DeleteMessageHandler).Methods("POST")
 
 	r.HandleFunc("/chat-rooms", handlers.ListChatRoomsHandler).Methods("GET")
 
 	// New handlers for chat room creation and deletion
 	r.HandleFunc("/admin/createChatRoom", handlers.CreateChatRoomHandler).Methods("POST")
 	r.HandleFunc("/admin/deleteChatRoom", handlers.DeleteChatRoomHandler).Methods("DELETE")
+	r.HandleFunc("/admin/deleteMessage", handlers.DeleteMessageHandler).Methods("POST")
 
 	r.HandleFunc("/admin-chat", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "frontend/admin_chat.html")

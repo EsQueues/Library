@@ -37,6 +37,9 @@
       color: blue;
       text-decoration: underline;
     }
+    .username {
+      color: green; /* Change the color to your desired color */
+    }
   </style>
 </head>
 <body class="container mt-5">
@@ -114,9 +117,8 @@
 
       // Create a new element for the message
       var messageElement = document.createElement("div");
-      messageElement.textContent = message["Username"] + ": " + message["Content"];
+      messageElement.innerHTML = `<span class="text-success font-weight-bold">${message["Username"]}:</span> ${message["Content"]}`;
 
-      // Append the message element to the chat container
       var chatContainer = document.getElementById("chat");
       chatContainer.appendChild(messageElement);
 
