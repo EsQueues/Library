@@ -6,11 +6,9 @@
 ```
 $ git clone https://github.com/EsQueues/Book-management-system.git
 ```
-### Run
+### Run the project
 ```
 $ cd website
-```
-```
 $ go run main.go
 ```
 
