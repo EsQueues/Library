@@ -6,4 +6,5 @@ type Book struct {
 	Genre           string `json:"genre"`
 	PublicationYear int32  `json:"publicationYear"`
 	ISBN            string `json:"isbn"`
+	Price           int    `json:"price"` // Add price field for book
 }

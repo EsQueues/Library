@@ -14,4 +14,5 @@ type User struct {
 	Code     string               `json:"code"`
 	Active   bool                 `json:"active"` // The active status of the user
 	Cart     []primitive.ObjectID `json:"cart,omitempty" bson:"cart,omitempty"`
+	BookList []string             `json:"booklist,omitempty" bson:"booklist,omitempty"` // Add booklist field for user's purchased books
 }

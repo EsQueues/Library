@@ -59,6 +59,8 @@ func main() {
 		http.ServeFile(w, r, "frontend/chat.html")
 	}).Methods("GET")
 
+	r.HandleFunc("/buy", handlers.TransactionHandler).Methods("POST")
+
 	r.Use(middleware.RateLimitMiddleware)
 
 	server := &http.Server{
