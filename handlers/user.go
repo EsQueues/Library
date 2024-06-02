@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"html/template"
 	"log"
 	"math/rand"
@@ -392,4 +394,89 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/profile", http.StatusSeeOther)
+}
+func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var requestData struct {
+		BookID string `json:"bookId"`
+	}
+	err = json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	bookID, err := primitive.ObjectIDFromHex(requestData.BookID)
+	if err != nil {
+		http.Error(w, "Invalid book ID", http.StatusBadRequest)
+		return
+	}
+
+	collection := client.Database("project").Collection("users")
+	filter := bson.M{"username": username}
+	update := bson.M{"$addToSet": bson.M{"cart": bookID}}
+
+	_, err = collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func GetCartHandler(w http.ResponseWriter, r *http.Request) {
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	collection := client.Database("project").Collection("users")
+	filter := bson.M{"username": username}
+	var user models.User
+	err = collection.FindOne(context.Background(), filter).Decode(&user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	booksCollection := client.Database("project").Collection("books")
+	var books []models.Book
+	cursor, err := booksCollection.Find(context.Background(), bson.M{"_id": bson.M{"$in": user.Cart}})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(context.Background())
+
+	for cursor.Next(context.Background()) {
+		var book models.Book
+		err := cursor.Decode(&book)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		books = append(books, book)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(books)
 }
