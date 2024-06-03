@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// LoadRoutes loads all routes for the application
 func LoadRoutes(r *mux.Router) {
 	r.HandleFunc("/", handlers.StartHandler).Methods("GET")
 	r.HandleFunc("/register", handlers.RegisterHandler).Methods("POST", "GET")
