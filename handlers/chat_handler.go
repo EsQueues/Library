@@ -35,6 +35,7 @@ func HandleConnection(conn *websocket.Conn, username string, chatID string) {
 		delete(clients, conn)
 		mutex.Unlock()
 	}()
+	go HandleMessages()
 
 	loadPreviousMessages(conn, chatID)
 
@@ -101,4 +102,7 @@ func loadPreviousMessages(conn *websocket.Conn, chatID string) {
 	if err := cursor.Err(); err != nil {
 		log.Printf("Cursor error: %v", err)
 	}
+}
+func ChatHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "frontend/chat.html")
 }

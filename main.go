@@ -4,65 +4,15 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"website/handlers"
 	"website/middleware"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
 func main() {
-	go handlers.HandleMessages()
 	r := mux.NewRouter()
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Received request for /")
-		http.ServeFile(w, r, "frontend/index.html")
-	})
-
-	r.HandleFunc("/register", handlers.RegisterHandler).Methods("POST", "GET")
-	r.HandleFunc("/login", handlers.LoginHandler).Methods("POST", "GET")
-	r.HandleFunc("/profile", handlers.ProfileHandler).Methods("GET")
-	r.HandleFunc("/delete", handlers.DeleteHandler).Methods("POST")
-	r.HandleFunc("/edit", handlers.EditHandler).Methods("GET")
-	r.HandleFunc("/update", handlers.UpdateHandler).Methods("POST")
-	r.HandleFunc("/filtered-books", handlers.FilterBooksHandler).Methods("GET")
-	r.HandleFunc("/confirm", handlers.ConfirmHandler).Methods("GET", "POST")
-	r.HandleFunc("/email-confirmed", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "frontend/email-confirmed.html")
-	})
-
-	r.HandleFunc("/", handlers.IndexHandler)
-	r.HandleFunc("/message", handlers.MessageHandler).Methods("GET", "POST")
-	r.HandleFunc("/admin", handlers.AdminDashboardHandler).Methods("GET")
-	r.HandleFunc("/edit-book", handlers.EditBookHandler).Methods("GET")
-	r.HandleFunc("/delete-book", handlers.DeleteBookHandler).Methods("POST")
-	r.HandleFunc("/add-book", handlers.AddBookHandler).Methods("POST")
-	r.HandleFunc("/ws", serveWs).Methods("GET")
-
-	r.HandleFunc("/chat-rooms", handlers.ListChatRoomsHandler).Methods("GET")
-
-	// New handlers for chat room creation and deletion
-	r.HandleFunc("/admin/createChatRoom", handlers.CreateChatRoomHandler).Methods("POST")
-	r.HandleFunc("/admin/deleteChatRoom", handlers.DeleteChatRoomHandler).Methods("DELETE")
-	r.HandleFunc("/admin/deleteMessage", handlers.DeleteMessageHandler).Methods("POST")
-
-	r.HandleFunc("/admin-chat", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "frontend/admin_chat.html")
-	}).Methods("GET")
-	r.HandleFunc("/chat", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "frontend/chat.html")
-	}).Methods("GET")
-
-	r.HandleFunc("/buy", handlers.TransactionHandler).Methods("POST")
-
+	LoadRoutes(r)
 	r.Use(middleware.RateLimitMiddleware)
-
 	server := &http.Server{
 		Addr:         ":8080",
 		Handler:      r,
@@ -70,26 +20,8 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	log.Println("Server listening on port 8080")
+	log.Println("Server started on port: http://localhost:8080/")
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal("Error starting the server:", err)
 	}
-}
-
-func serveWs(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println("Error upgrading to websocket:", err)
-		return
-	}
-	username := r.URL.Query().Get("username")
-	if username == "" {
-		username = "Anonymous"
-	}
-	chatID := r.URL.Query().Get("chatID")
-	if chatID == "" {
-		chatID = "default"
-	}
-
-	handlers.HandleConnection(conn, username, chatID)
 }

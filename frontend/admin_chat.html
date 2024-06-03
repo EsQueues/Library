@@ -230,7 +230,7 @@
     }
 
     function loadChatRooms() {
-        fetch('/chat-rooms')
+        fetch('/admin/chat-rooms')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch chat rooms');
