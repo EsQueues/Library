@@ -484,3 +484,7 @@ func DeleteMessageHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
+
+func AdminChatHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "frontend/admin_chat.html")
+}

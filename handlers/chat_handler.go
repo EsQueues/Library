@@ -102,3 +102,6 @@ func loadPreviousMessages(conn *websocket.Conn, chatID string) {
 		log.Printf("Cursor error: %v", err)
 	}
 }
+func ChatHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "frontend/chat.html")
+}
