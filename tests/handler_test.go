@@ -1,4 +1,4 @@
-package handlers
+package tests
 
 import (
 	"bytes"
@@ -10,13 +10,14 @@ import (
 	"net/http/httptest"
 	"testing"
 	"unicode"
+	"website/handlers"
 	"website/models"
 )
 
 func TestIfGeneratedCodeIsCorrect(t *testing.T) {
-	code := GenerateCode()
-	if len(code) != codeLength {
-		t.Errorf("generated code length is incorrect: got %d, want %d", len(code), codeLength)
+	code := handlers.GenerateCode()
+	if len(code) != handlers.CodeLength {
+		t.Errorf("generated code length is incorrect: got %d, want %d", len(code), handlers.CodeLength)
 	}
 	for _, char := range code {
 		if !unicode.IsDigit(char) {
@@ -46,7 +47,7 @@ func TestIfUserAfterRegistrationSavedInDBCorrectly(t *testing.T) {
 	}
 	registerReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	registerResp := httptest.NewRecorder()
-	RegisterHandler(registerResp, registerReq)
+	handlers.RegisterHandler(registerResp, registerReq)
 
 	if registerResp.Code != http.StatusSeeOther {
 		t.Fatalf("Expected status code %d, got %d", http.StatusSeeOther, registerResp.Code)

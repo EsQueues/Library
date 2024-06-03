@@ -68,11 +68,11 @@ func SendMail(subject string, body string, to []string, auth EmailAuth) error {
 	return nil
 }
 
-const codeLength = 6 // Adjust the code length as needed
+const CodeLength = 6 // Adjust the code length as needed
 
 func GenerateCode() string {
 	const charset = "0123456789"
-	randomCode := make([]byte, codeLength)
+	randomCode := make([]byte, CodeLength)
 	for i := range randomCode {
 		randomCode[i] = charset[rand.Intn(len(charset))]
 	}

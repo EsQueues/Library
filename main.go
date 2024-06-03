@@ -47,7 +47,6 @@ func main() {
 
 	r.HandleFunc("/chat-rooms", handlers.ListChatRoomsHandler).Methods("GET")
 
-	// New handlers for chat room creation and deletion
 	r.HandleFunc("/admin/createChatRoom", handlers.CreateChatRoomHandler).Methods("POST")
 	r.HandleFunc("/admin/deleteChatRoom", handlers.DeleteChatRoomHandler).Methods("DELETE")
 	r.HandleFunc("/admin/deleteMessage", handlers.DeleteMessageHandler).Methods("POST")

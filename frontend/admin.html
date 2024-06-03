@@ -3,43 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Form</title>
-    <!-- Add Bootstrap CSS link -->
+    <title>Admin</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .custom-hr {
+            height: 5px;
+            background-color: #000;
+            border: none;
+        }
+    </style>
+
+
 </head>
 <body>
-<a href="/admin-chat" class="btn btn-primary">Admin Chat</a> <!-- Link to Admin Chat page -->
+
 <div class="container">
-    <h2 class="mt-5">Send Email to All Users</h2>
+    <div class="d-flex align-items-center justify-content-center m-5">
+
+
+        <h1>{{.Title}}</h1>
+    </div>
+    <hr class="custom-hr">
+    <div class="d-flex justify-content-start mt-3">
+        <a href="/admin-chat" class="btn btn-primary">Manage Chats</a>
+    </div>
+    <hr class="custom-hr">
+
+
+    <h3  class="mt-5">Send Email to All Users</h3>
     <form action="/message" method="post" class="mt-3">
         <div class="form-group">
             <label for="subject">Subject:</label>
-            <input type="text" id="subject" name="subject" class="form-control">
+            <input type="text" id="subject" name="subject" class="form-control" required>
         </div>
         <div class="form-group">
             <label for="body">Body:</label>
-            <textarea id="body" name="body" rows="4" cols="50" class="form-control"></textarea>
+            <textarea id="body" name="body" rows="4" cols="50" class="form-control" required></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Send Email</button>
     </form>
-
+    <hr class="custom-hr">
 
     <div class="container mt-4">
-        <h2>{{.Title}}</h2>
-        <!-- Add Book Form -->
+        <h3>Book management</h3>
         <form action="/add-book" method="post">
-            <input type="text" name="title" placeholder="Title" required />
-            <input type="text" name="author" placeholder="Author" required />
-            <input type="text" name="genre" placeholder="Genre" required />
-            <input
-                    type="number"
-                    name="publicationYear"
-                    placeholder="Publication Year"
-                    required
-            />
+            <input type="text" name="title" placeholder="Title" class="form-control mb-2" required />
+            <input type="text" name="author" placeholder="Author" class="form-control mb-2" required />
+            <input type="text" name="genre" placeholder="Genre" class="form-control mb-2" required />
+            <input type="number" name="publicationYear" placeholder="Publication Year" class="form-control mb-2" required />
             <button class="btn btn-success" type="submit">Add Book</button>
         </form>
-        <div class="row">
+        <div class="row mt-4">
             {{range .Books}}
             <div class="col-md-6 mb-4">
                 <div class="card">
@@ -55,11 +69,7 @@
                         <!-- Delete Button -->
                         <form action="/delete-book" method="post" class="mt-3">
                             <input type="hidden" name="title" value="{{.Title}}" />
-                            <input
-                                    type="submit"
-                                    class="btn btn-danger"
-                                    value="Delete Book"
-                            />
+                            <input type="submit" class="btn btn-danger" value="Delete Book" />
                         </form>
                     </div>
                 </div>
@@ -67,14 +77,10 @@
             {{end}}
         </div>
     </div>
-
-
-
 </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
