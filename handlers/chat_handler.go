@@ -35,6 +35,7 @@ func HandleConnection(conn *websocket.Conn, username string, chatID string) {
 		delete(clients, conn)
 		mutex.Unlock()
 	}()
+	go HandleMessages()
 
 	loadPreviousMessages(conn, chatID)
 

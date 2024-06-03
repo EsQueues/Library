@@ -1,220 +1,220 @@
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Homepage</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
-  </head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Homepage</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+</head>
 
-  <body class="container mt-4">
-  <div class="row mb-4">
-    <div class="col">
-      <h1>Welcome to the Homepage</h1>
+<body class="container mt-4">
+<div class="row mb-4">
+  <div class="col">
+    <h1>Welcome to the Homepage</h1>
+  </div>
+  <div class="col-md-3 text-right" id="auth-buttons">
+    <!-- Authentication buttons will be injected here by JavaScript -->
+  </div>
+</div>
+
+<form action="/filtered-books" method="get" class="mb-4">
+  <div class="form-row align-items-end">
+    <div class="col-md-4 mb-2">
+      <label for="filter">Filter by Title:</label>
+      <input
+              type="text"
+              id="filter"
+              name="filter"
+              class="form-control"
+              placeholder="Enter title"
+      />
     </div>
-    <div class="col-md-3 text-right" id="auth-buttons">
-      <!-- Authentication buttons will be injected here by JavaScript -->
+    <div class="col-md-4 mb-2">
+      <label for="sort">Sort:</label>
+      <select id="sort" name="sort" class="form-control">
+        <option value="title">By Title</option>
+        <option value="author">By Author</option>
+        <option value="genre">By Genre</option>
+        <option value="publicationYear">By Publication Year</option>
+      </select>
+    </div>
+    <div class="col-md-4 mb-2">
+      <button type="submit" class="btn btn-primary">Apply</button>
     </div>
   </div>
+</form>
 
-  <form action="/filtered-books" method="get" class="mb-4">
-    <div class="form-row align-items-end">
-      <div class="col-md-4 mb-2">
-        <label for="filter">Filter by Title:</label>
-        <input
-                type="text"
-                id="filter"
-                name="filter"
-                class="form-control"
-                placeholder="Enter title"
-        />
+<hr />
+
+<div id="filtered-books"></div>
+
+<div id="pagination" class="mt-4">
+  <button onclick="previousPage()" class="btn btn-outline-primary">Previous</button>
+  <span id="currentPage" class="mx-2">1</span>
+  <button onclick="nextPage()" class="btn btn-outline-primary">Next</button>
+</div>
+
+<!-- Shopping Cart Section -->
+<div class="mt-4">
+  <h2>Shopping Cart</h2>
+  <ul id="shopping-cart" class="list-group"></ul>
+
+  <button id="buyButton" onclick="openPaymentForm()" class="btn btn-primary" style="display: none;">Buy</button>
+
+</div>
+<div id="payment-form" style="display: none;">
+  <h2>Payment Information</h2>
+  <form id="payment-info-form">
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" class="form-control" required>
       </div>
-      <div class="col-md-4 mb-2">
-        <label for="sort">Sort:</label>
-        <select id="sort" name="sort" class="form-control">
-          <option value="title">By Title</option>
-          <option value="author">By Author</option>
-          <option value="genre">By Genre</option>
-          <option value="publicationYear">By Publication Year</option>
-        </select>
-      </div>
-      <div class="col-md-4 mb-2">
-        <button type="submit" class="btn btn-primary">Apply</button>
+      <div class="form-group col-md-6">
+        <label for="surname">Surname:</label>
+        <input type="text" id="surname" name="surname" class="form-control" required>
       </div>
     </div>
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label for="credit-card">Credit Card Number:</label>
+      <input type="text" id="credit-card" name="credit-card" class="form-control" required>
+    </div>
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label for="expiration-date">Expiration Date:</label>
+        <input type="text" id="expiration-date" name="expiration-date" class="form-control" required>
+      </div>
+      <div class="form-group col-md-6">
+        <label for="cvv">CVV:</label>
+        <input type="text" id="cvv" name="cvv" class="form-control" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="phone-number">Phone Number:</label>
+      <input type="text" id="phone-number" name="phone-number" class="form-control" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit Payment</button>
   </form>
-
-  <hr />
-
-  <div id="filtered-books"></div>
-
-  <div id="pagination" class="mt-4">
-    <button onclick="previousPage()" class="btn btn-outline-primary">Previous</button>
-    <span id="currentPage" class="mx-2">1</span>
-    <button onclick="nextPage()" class="btn btn-outline-primary">Next</button>
-  </div>
-
-  <!-- Shopping Cart Section -->
-  <div class="mt-4">
-    <h2>Shopping Cart</h2>
-    <ul id="shopping-cart" class="list-group"></ul>
-
-    <button id="buyButton" onclick="openPaymentForm()" class="btn btn-primary" style="display: none;">Buy</button>
-
-  </div>
-  <div id="payment-form" style="display: none;">
-    <h2>Payment Information</h2>
-    <form id="payment-info-form">
-      <div class="form-row">
-        <div class="form-group col-md-6">
-          <label for="name">Name:</label>
-          <input type="text" id="name" name="name" class="form-control" required>
-        </div>
-        <div class="form-group col-md-6">
-          <label for="surname">Surname:</label>
-          <input type="text" id="surname" name="surname" class="form-control" required>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" class="form-control" required>
-      </div>
-      <div class="form-group">
-        <label for="credit-card">Credit Card Number:</label>
-        <input type="text" id="credit-card" name="credit-card" class="form-control" required>
-      </div>
-      <div class="form-row">
-        <div class="form-group col-md-6">
-          <label for="expiration-date">Expiration Date:</label>
-          <input type="text" id="expiration-date" name="expiration-date" class="form-control" required>
-        </div>
-        <div class="form-group col-md-6">
-          <label for="cvv">CVV:</label>
-          <input type="text" id="cvv" name="cvv" class="form-control" required>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="phone-number">Phone Number:</label>
-        <input type="text" id="phone-number" name="phone-number" class="form-control" required>
-      </div>
-
-      <button type="submit" class="btn btn-primary">Submit Payment</button>
-    </form>
-  </div>
+</div>
 
 
 
-  <script>
-    document.getElementById("payment-info-form").addEventListener("submit", function (event) {
-      event.preventDefault(); // Prevent the default form submission behavior
+<script>
+  document.getElementById("payment-info-form").addEventListener("submit", function (event) {
+    event.preventDefault(); // Prevent the default form submission behavior
 
-      // Gather payment information from form fields
-      const paymentInfo = {
-        name: document.getElementById("name").value,
-        surname: document.getElementById("surname").value,
-        email: document.getElementById("email").value,
-        creditCard: document.getElementById("credit-card").value,
-        expirationDate: document.getElementById("expiration-date").value,
-        cvv: document.getElementById("cvv").value,
-        phoneNumber: document.getElementById("phone-number").value
-      };
+    // Gather payment information from form fields
+    const paymentInfo = {
+      name: document.getElementById("name").value,
+      surname: document.getElementById("surname").value,
+      email: document.getElementById("email").value,
+      creditCard: document.getElementById("credit-card").value,
+      expirationDate: document.getElementById("expiration-date").value,
+      cvv: document.getElementById("cvv").value,
+      phoneNumber: document.getElementById("phone-number").value
+    };
 
-      // Extract book titles from the cart
-      const bookNames = cart.map(item => item.title);
+    // Extract book titles from the cart
+    const bookNames = cart.map(item => item.title);
 
-      // Prepare transaction data
-      const transactionData = {
-        transaction: paymentInfo,
-        bookNames: bookNames
-      };
+    // Prepare transaction data
+    const transactionData = {
+      transaction: paymentInfo,
+      bookNames: bookNames
+    };
 
-      // Send HTTP POST request to save transaction data
-      fetch('/buy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(transactionData)
-      })
-              .then(response => {
-                if (!response.ok) {
-                  return response.text().then(text => {
-                    // Try to parse error response as JSON
-                    try {
-                      const json = JSON.parse(text);
-                      throw new Error(json.message || 'An error occurred');
-                    } catch (e) {
-                      // If response is not valid JSON, throw text response
-                      throw new Error(text || 'An error occurred');
-                    }
-                  });
-                }
-                return response.json();
-              })
-              .then(data => {
-                alert("Transaction saved successfully!");
-                document.getElementById("shopping-cart").innerHTML = ''; // Clear the shopping cart
-                cart.length = 0; // Clear cart array
-                document.getElementById("payment-form").style.display = "none"; // Hide the payment form after successful submission
-              })
-              .catch(error => {
-                console.error('There was a problem with the fetch operation:', error.message);
-                alert(`Failed to save transaction. Error: ${error.message}`);
-              });
-    });
+    // Send HTTP POST request to save transaction data
+    fetch('/buy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(transactionData)
+    })
+            .then(response => {
+              if (!response.ok) {
+                return response.text().then(text => {
+                  // Try to parse error response as JSON
+                  try {
+                    const json = JSON.parse(text);
+                    throw new Error(json.message || 'An error occurred');
+                  } catch (e) {
+                    // If response is not valid JSON, throw text response
+                    throw new Error(text || 'An error occurred');
+                  }
+                });
+              }
+              return response.json();
+            })
+            .then(data => {
+              alert("Transaction saved successfully!");
+              document.getElementById("shopping-cart").innerHTML = ''; // Clear the shopping cart
+              cart.length = 0; // Clear cart array
+              document.getElementById("payment-form").style.display = "none"; // Hide the payment form after successful submission
+            })
+            .catch(error => {
+              console.error('There was a problem with the fetch operation:', error.message);
+              alert(`Failed to save transaction. Error: ${error.message}`);
+            });
+  });
 
 
 
-    function updateBuyButtonVisibility() {
-      const buyButton = document.getElementById("buyButton");
-      if (cart.length > 0) {
-        buyButton.style.display = "block";
-      } else {
-        buyButton.style.display = "none";
-      }
+  function updateBuyButtonVisibility() {
+    const buyButton = document.getElementById("buyButton");
+    if (cart.length > 0) {
+      buyButton.style.display = "block";
+    } else {
+      buyButton.style.display = "none";
     }
+  }
 
-    // Function to open the payment form
-    function openPaymentForm() {
-      // Show/hide payment form dynamically
-      document.getElementById("payment-form").style.display = "block";
-    }
+  // Function to open the payment form
+  function openPaymentForm() {
+    // Show/hide payment form dynamically
+    document.getElementById("payment-form").style.display = "block";
+  }
 
-    const cart = [];
+  const cart = [];
 
-    // Function to add an item to the cart
-    function addToCart(title, author, genre, publicationYear) {
-      const cartItem = { title, author, genre, publicationYear };
-      cart.push(cartItem);
+  // Function to add an item to the cart
+  function addToCart(title, author, genre, publicationYear) {
+    const cartItem = { title, author, genre, publicationYear };
+    cart.push(cartItem);
 
-      const cartItemElement = document.createElement("li");
-      cartItemElement.className = "list-group-item";
-      cartItemElement.textContent = `${title}`;
-      document.getElementById("shopping-cart").appendChild(cartItemElement);
+    const cartItemElement = document.createElement("li");
+    cartItemElement.className = "list-group-item";
+    cartItemElement.textContent = `${title}`;
+    document.getElementById("shopping-cart").appendChild(cartItemElement);
 
-      // Update visibility of "Buy" button
-      updateBuyButtonVisibility();
-    }
+    // Update visibility of "Buy" button
+    updateBuyButtonVisibility();
+  }
 
 
-    let currentPage = 1;
+  let currentPage = 1;
 
-    function updatePageNumber() {
-      document.getElementById("currentPage").innerText = currentPage;
-    }
+  function updatePageNumber() {
+    document.getElementById("currentPage").innerText = currentPage;
+  }
 
-    function fetchAndDisplayBooks() {
-      const filterValue = document.getElementById("filter").value;
-      const sortValue = document.getElementById("sort").value;
+  function fetchAndDisplayBooks() {
+    const filterValue = document.getElementById("filter").value;
+    const sortValue = document.getElementById("sort").value;
 
-      fetch(`/filtered-books?filter=${filterValue}&sort=${sortValue}&page=${currentPage}`)
-              .then((response) => response.json())
-              .then((books) => {
-                document.getElementById("filtered-books").innerHTML = "";
+    fetch(`/filtered-books?filter=${filterValue}&sort=${sortValue}&page=${currentPage}`)
+            .then((response) => response.json())
+            .then((books) => {
+              document.getElementById("filtered-books").innerHTML = "";
 
-                books.forEach((book) => {
-                  const bookElement = document.createElement("div");
-                  bookElement.innerHTML = `
+              books.forEach((book) => {
+                const bookElement = document.createElement("div");
+                bookElement.innerHTML = `
                 <strong>Title:</strong> ${book.title}<br>
                 <strong>Author:</strong> ${book.author}<br>
                 <strong>Genre:</strong> ${book.genre}<br>
@@ -222,71 +222,71 @@
                 <button onclick="addToCart('${book.title}')" class="btn btn-primary mt-2">Add to Cart</button>
                 <hr>`;
 
-                  document.getElementById("filtered-books").appendChild(bookElement);
-                });
-
-                updatePageNumber();
-              })
-              .catch((error) => {
-                console.error("Error fetching filtered books:", error);
+                document.getElementById("filtered-books").appendChild(bookElement);
               });
-    }
+
+              updatePageNumber();
+            })
+            .catch((error) => {
+              console.error("Error fetching filtered books:", error);
+            });
+  }
 
 
 
 
 
 
-    function nextPage() {
-      currentPage++;
-      fetchAndDisplayBooks();
-    }
-
-    function previousPage() {
-      if (currentPage > 1) {
-        currentPage--;
-        fetchAndDisplayBooks();
-      }
-    }
-
-    document.querySelector("form").addEventListener("submit", function (event) {
-      event.preventDefault();
-      currentPage = 1;
-      fetchAndDisplayBooks();
-    });
-
+  function nextPage() {
+    currentPage++;
     fetchAndDisplayBooks();
+  }
 
-    // Get the username from the URL query parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const username = urlParams.get("username");
-
-    const authButtonsDiv = document.getElementById("auth-buttons");
-
-    if (username) {
-      // If username exists, display it as a link to the profile page and the Create Chat button
-      const profileLink = document.createElement("a");
-      profileLink.href = "/profile";
-      profileLink.classList.add("btn", "btn-secondary", "ml-2");
-      profileLink.textContent = username;
-
-      const createChatButton = document.createElement("a");
-      createChatButton.href = "/chat";
-      createChatButton.classList.add("btn", "btn-info", "mt-3", "mr-2");
-      createChatButton.textContent = "Connect to Chat";
-
-      authButtonsDiv.appendChild(createChatButton);
-      authButtonsDiv.appendChild(profileLink);
-    } else {
-      // If username doesn't exist, display the sign-in button
-      const signInButton = document.createElement("a");
-      signInButton.href = "/login";
-      signInButton.classList.add("btn", "btn-secondary", "ml-2");
-      signInButton.textContent = "Sign In";
-      authButtonsDiv.appendChild(signInButton);
-
+  function previousPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      fetchAndDisplayBooks();
     }
+  }
 
-  </script>
-  </body>
-  </html>
+  document.querySelector("form").addEventListener("submit", function (event) {
+    event.preventDefault();
+    currentPage = 1;
+    fetchAndDisplayBooks();
+  });
+
+  fetchAndDisplayBooks();
+
+  // Get the username from the URL query parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get("username");
+
+  const authButtonsDiv = document.getElementById("auth-buttons");
+
+  if (username) {
+    // If username exists, display it as a link to the profile page and the Create Chat button
+    const profileLink = document.createElement("a");
+    profileLink.href = "/profile";
+    profileLink.classList.add("btn", "btn-secondary", "ml-2");
+    profileLink.textContent = username;
+
+    const createChatButton = document.createElement("a");
+    createChatButton.href = "/chat";
+    createChatButton.classList.add("btn", "btn-info", "mt-3", "mr-2");
+    createChatButton.textContent = "Connect to Chat";
+
+    authButtonsDiv.appendChild(createChatButton);
+    authButtonsDiv.appendChild(profileLink);
+  } else {
+    // If username doesn't exist, display the sign-in button
+    const signInButton = document.createElement("a");
+    signInButton.href = "/login";
+    signInButton.classList.add("btn", "btn-secondary", "ml-2");
+    signInButton.textContent = "Sign In";
+    authButtonsDiv.appendChild(signInButton);
+
+  }
+
+</script>
+</body>
+</html>
