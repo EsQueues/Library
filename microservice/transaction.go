@@ -1,7 +1,8 @@
-package handlers
+package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/jung-kurt/gofpdf"
 	"gopkg.in/gomail.v2"
@@ -9,20 +10,33 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"website/database"
 	"website/models"
-
-	"golang.org/x/net/context"
 )
 
-// PaymentRequest combines payment information and book names
 type PaymentRequest struct {
 	Transaction models.Transaction `json:"transaction"`
 	BookNames   []string           `json:"bookNames"`
 }
 
+func saveTransactionToDatabase(transaction models.Transaction, bookNames []string) error {
+
+	collection := database.Collection("transactions")
+
+	// Combine payment information and book names into a single transaction obj
+	transaction.Books = bookNames
+
+	_, err := collection.InsertOne(context.Background(), transaction)
+	if err != nil {
+		log.Printf("Failed to insert transaction into database: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 // TransactionHandler handles the request to save a transaction to MongoDB and send an email
 func TransactionHandler(w http.ResponseWriter, r *http.Request) {
+
 	// Parse payment request from request body
 	var paymentRequest PaymentRequest
 	err := json.NewDecoder(r.Body).Decode(&paymentRequest)
@@ -68,14 +82,7 @@ func TransactionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // saveTransactionToDatabase saves the transaction to the MongoDB collection
-func saveTransactionToDatabase(transaction models.Transaction, bookNames []string) error {
-	// Combine payment information and book names into a single transaction obj
-	transaction.Books = bookNames
 
-	collection := database.Client.Database("project").Collection("transactions")
-	_, err := collection.InsertOne(context.Background(), transaction)
-	return err
-}
 func generatePDF(transaction models.Transaction, books []string) ([]byte, error) {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
