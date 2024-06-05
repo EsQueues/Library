@@ -16,13 +16,10 @@ func LoadRoutes(r *mux.Router) {
 	r.HandleFunc("/delete", handlers.DeleteHandler).Methods("POST")
 	r.HandleFunc("/edit", handlers.EditHandler).Methods("GET")
 	r.HandleFunc("/update", handlers.UpdateHandler).Methods("POST")
-
 	r.HandleFunc("/filtered-books", handlers.FilterBooksHandler).Methods("GET")
-	r.HandleFunc("/buy", handlers.TransactionHandler).Methods("POST")
 	r.HandleFunc("/ws", serveWs).Methods("GET")
 	r.HandleFunc("/chat-rooms", handlers.ListChatRoomsHandler).Methods("GET")
 	r.HandleFunc("/chat", handlers.ChatHandler).Methods("GET")
-
 	r.HandleFunc("/admin", handlers.AdminDashboardHandler).Methods("GET")
 	r.HandleFunc("/admin/message", handlers.MessageHandler).Methods("GET", "POST")
 	r.HandleFunc("/admin/createChatRoom", handlers.CreateChatRoomHandler).Methods("POST")

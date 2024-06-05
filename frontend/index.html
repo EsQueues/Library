@@ -119,17 +119,19 @@
       phoneNumber: document.getElementById("phone-number").value
     };
 
-    // Extract book titles from the cart
+// Extract book titles from the cart
     const bookNames = cart.map(item => item.title);
 
-    // Prepare transaction data
+// Prepare transaction data
     const transactionData = {
       transaction: paymentInfo,
       bookNames: bookNames
     };
 
-    // Send HTTP POST request to save transaction data
-    fetch('/buy', {
+    console.log("Sending data:", JSON.stringify(transactionData)); // Log the data
+
+// Send HTTP POST request to save transaction data
+    fetch('http://localhost:8081/buy', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -139,12 +141,10 @@
             .then(response => {
               if (!response.ok) {
                 return response.text().then(text => {
-                  // Try to parse error response as JSON
                   try {
                     const json = JSON.parse(text);
                     throw new Error(json.message || 'An error occurred');
                   } catch (e) {
-                    // If response is not valid JSON, throw text response
                     throw new Error(text || 'An error occurred');
                   }
                 });
@@ -161,11 +161,12 @@
               console.error('There was a problem with the fetch operation:', error.message);
               alert(`Failed to save transaction. Error: ${error.message}`);
             });
-  });
+  }
+  )
 
 
 
-  function updateBuyButtonVisibility() {
+    function updateBuyButtonVisibility() {
     const buyButton = document.getElementById("buyButton");
     if (cart.length > 0) {
       buyButton.style.display = "block";
