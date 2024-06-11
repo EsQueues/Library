@@ -21,25 +21,19 @@ $ go run main.go
 - Bootstrap 5
 - JavaScript
 -------------------------------------------------------------------------------------------------------------------
-##Features:
+## Features:
 
-###User
--AUTHENTIFICATION:
-Real gmail 6x code confirmation
--CHAT APP:
-Websocket real time chat app, all messages saves in db
--CART SYSTEM:
-Microservice on another localhost(8081) where does transaction buying books, send bill to gmail
--CRUD:
-Can edit and delete your own profile
+### User
+- **AUTHENTICATION**: Real Gmail 6x code confirmation
+- **CHAT APP**: WebSocket real-time chat app, all messages saved in the database
+- **CART SYSTEM**: Microservice on another localhost (8081) where transactions for buying books are handled, and a bill is sent to Gmail
+- **CRUD**: Can edit and delete your own profile
 
-###Admin
--CRUD:
-Can create, edit, delete books
--MAILING:
-Can mail all users
--CHAT APP:
-Can create, delete chats, and delete messages on chats
+### Admin
+- **CRUD**: Can create, edit, delete books
+- **MAILING**: Can mail all users
+- **CHAT APP**: Can create, delete chats, and delete messages on chats
+
 -------------------------------------------------------------------------------------------------------------------
 
 ## Test
