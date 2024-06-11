@@ -1,6 +1,6 @@
 
 ## BOOK MANAGEMENT SYSTEM
-
+---------------------------------------------------------------------------------------------------------------------
 ## Installation
 ### Clone the project
 ```
@@ -11,7 +11,6 @@ $ git clone https://github.com/EsQueues/Book-management-system.git
 $ cd website
 $ go run main.go
 ```
-
 ## Stack
 ### Backend
 - Golang
@@ -21,6 +20,27 @@ $ go run main.go
 - HTML 5
 - Bootstrap 5
 - JavaScript
+-------------------------------------------------------------------------------------------------------------------
+##Features:
+
+###User
+-AUTHENTIFICATION:
+Real gmail 6x code confirmation
+-CHAT APP:
+Websocket real time chat app, all messages saves in db
+-CART SYSTEM:
+Microservice on another localhost(8081) where does transaction buying books, send bill to gmail
+-CRUD:
+Can edit and delete your own profile
+
+###Admin
+-CRUD:
+Can create, edit, delete books
+-MAILING:
+Can mail all users
+-CHAT APP:
+Can create, delete chats, and delete messages on chats
+-------------------------------------------------------------------------------------------------------------------
 
 ## Test
 - 1 E2E test
